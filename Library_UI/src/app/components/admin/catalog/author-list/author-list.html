@@ -1,0 +1,59 @@
+<div class="container">
+  <div class="header">
+    <h2>✍️ Authors</h2>
+    <a routerLink="/admin/authors/add" class="btn-add">+ Add Author</a>
+  </div>
+
+  <div class="toolbar">
+    <input type="text" [(ngModel)]="searchTerm" (input)="refresh()" placeholder=" Search name, nationality, email..." class="search-input" />
+  </div>
+
+  @if (error) { <div class="alert-error">{{ error }}</div> }
+  @if (successMessage) { <div class="alert-success"> {{ successMessage }}</div> }
+  @if (loading) { <div class="alert-info"> Loading...</div> }
+  @if (!loading && filtered.length === 0 && !error) { <div class="alert-warning">No authors found.</div> }
+
+  @if (!loading && filtered.length > 0) {
+    <table>
+      <thead>
+        <tr>
+          <th class="sortable" (click)="sortBy('authorId')"># {{ icon('authorId') }}</th>
+          <th class="sortable" (click)="sortBy('fullName')">Full Name {{ icon('fullName') }}</th>
+          <th class="sortable" (click)="sortBy('nationality')">Nationality {{ icon('nationality') }}</th>
+          <th class="sortable" (click)="sortBy('email')">Email {{ icon('email') }}</th>
+          <th class="sortable" (click)="sortBy('isActive')">Status {{ icon('isActive') }}</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (item of paged; track item.authorId) {
+          <tr>
+            <td>{{ item.authorId }}</td>
+            <td>
+              <strong>{{ item.fullName }}</strong>
+              @if (item.pseudonym) { <br><small>aka {{ item.pseudonym }}</small> }
+            </td>
+            <td>{{ item.nationality || '—' }}</td>
+            <td>{{ item.email || '—' }}</td>
+            <td>
+              @if (item.isActive) { <span class="badge-active">Active</span> }
+              @else { <span class="badge-inactive">Inactive</span> }
+            </td>
+            <td class="actions">
+              <button (click)="details(item.authorId)" class="btn-details"> Details</button>
+              <button (click)="edit(item.authorId)" class="btn-edit"> Edit</button>
+              <button (click)="delete(item.authorId)" class="btn-delete">🗑️ Delete</button>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+    <app-pagination
+      [currentPage]="currentPage"
+      [totalItems]="filtered.length"
+      [pageSize]="pageSize"
+      (pageChanged)="onPageChanged($event)"
+      (pageSizeChanged)="onPageSizeChanged($event)">
+    </app-pagination>
+  }
+</div>

@@ -1,0 +1,221 @@
+<div class="container">
+  <div class="header">
+    <h2>{{ viewOnly ? ' View Member' : (memberId ? ' Edit Member' : ' Add Member') }}</h2>
+  </div>
+
+  @if (error) { <div class="alert-error">{{ error }}</div> }
+  @if (success) { <div class="alert-success"> {{ success }}</div> }
+  @if (loading) { <div class="alert-info"> Loading...</div> }
+
+  @if (!loading) {
+    <div class="form-box">
+
+      @if (!memberId) {
+        <div class="form-group">
+          <label>User Account <span class="required">*</span></label>
+          @if (users.length > 0) {
+            <select [(ngModel)]="member.userId">
+              <option [value]="null" disabled>Select a registered user</option>
+              @for (u of users; track u.id) {
+                <option [value]="u.id">{{ u.email }} (ID: {{ u.id }})</option>
+              }
+            </select>
+          } @else {
+            <input type="number" [(ngModel)]="member.userId" placeholder="Enter User ID manually" />
+            <small class="hint">Must be the ID of a registered user from the Auth system.</small>
+          }
+        </div>
+      }
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Full Name <span class="required">*</span></label>
+          <input type="text" [(ngModel)]="member.fullName" placeholder="Member's full name" />
+        </div>
+        <div class="form-group">
+          <label>Phone</label>
+          <input type="text" [(ngModel)]="member.phone" placeholder="+880..." />
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Address</label>
+        <textarea [(ngModel)]="member.address" rows="2" placeholder="Full address"></textarea>
+      </div>
+
+      <div class="form-group">
+        <label>Profile Picture <span class="optional">(optional)</span></label>
+        <input type="file" accept="image/*" (change)="onProfilePictureSelected($event)" />
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Membership Type <span class="required">*</span></label>
+          <select [(ngModel)]="member.membershipTypeId">
+            <option [value]="null" disabled>Select type</option>
+            @for (t of membershipTypes; track t.membershipTypeId) {
+              <option [value]="t.membershipTypeId">{{ t.name }}</option>
+            }
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Expiry Date <span class="optional">(optional)</span></label>
+          <input type="date" [(ngModel)]="member.membershipExpiryDate" />
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Membership Status</label>
+          <select [(ngModel)]="member.membershipStatus" name="membershipStatus" [disabled]="viewOnly">
+            <option value="PendingApproval">Pending Approval</option>
+            <option value="Approved">Approved</option>
+            <option value="Rejected">Rejected</option>
+            <option value="Expired">Expired</option>
+            <option value="Suspended">Suspended</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Payment Status</label>
+          <select [(ngModel)]="member.paymentStatus" name="paymentStatus" [disabled]="viewOnly">
+            <option value="Pending">Pending</option>
+            <option value="Paid">Paid</option>
+            <option value="Overdue">Overdue</option>
+            <option value="Waived">Waived</option>
+          </select>
+        </div>
+      </div>
+
+      @if (!viewOnly) {
+        <div class="form-actions">
+          <button (click)="submit()" [disabled]="submitting" class="btn-save">
+            {{ submitting ? 'Saving...' : (memberId ? 'Update Member' : 'Create Member') }}
+          </button>
+          <button (click)="cancel()" [disabled]="submitting" class="btn-cancel">Cancel</button>
+        </div>
+      } @else {
+        <div class="form-actions">
+          <button (click)="cancel()" class="btn-cancel">Back to List</button>
+        </div>
+      }
+
+      @if (memberId) {
+        <div class="section-title payments-section">💳 Payments</div>
+        @if (memberDetail) {
+          <div class="fine-banner">
+            Outstanding fine: <strong>৳{{ memberDetail.outstandingFine | number:'1.2-2' }}</strong>
+          </div>
+        }
+        @if (paymentError) { <div class="alert-error">{{ paymentError }}</div> }
+        @if (paymentSuccess) { <div class="alert-success">{{ paymentSuccess }}</div> }
+
+        @if (!viewOnly) {
+          <div class="payment-form">
+            <div class="form-row">
+              <div class="form-group">
+                <label>Payment Type</label>
+                <select [(ngModel)]="paymentForm.paymentType">
+                  <option value="Fine">Fine</option>
+                  <option value="MembershipFee">Membership Fee</option>
+                  <option value="SecurityDeposit">Security Deposit</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Method</label>
+                <select [(ngModel)]="paymentForm.paymentMethod">
+                  <option value="Cash">Cash</option>
+                  <option value="Card">Card</option>
+                  <option value="Online">Online</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Amount (৳)</label>
+                <input type="number" [(ngModel)]="paymentForm.amount" min="0.01" step="0.01" />
+              </div>
+              <div class="form-group">
+                <label>Notes</label>
+                <input type="text" [(ngModel)]="paymentForm.notes" placeholder="Optional" />
+              </div>
+            </div>
+            <button type="button" class="btn-save btn-record" (click)="recordPayment()" [disabled]="paymentSubmitting">
+              {{ paymentSubmitting ? 'Recording...' : 'Record Payment' }}
+            </button>
+          </div>
+        }
+
+        <h4 class="payments-subtitle">Payment History</h4>
+        @if (paymentsLoading) { <p class="hint">Loading payments...</p> }
+        @if (!paymentsLoading && payments.length === 0) {
+          <p class="hint">No payments recorded yet.</p>
+        }
+        @if (!paymentsLoading && payments.length > 0) {
+          <table class="payments-table">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Type</th>
+                <th>Method</th>
+                <th>Amount</th>
+                <th>Notes</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (p of payments; track p.paymentId) {
+                <tr>
+                  <td>{{ p.paymentDate | date:'medium' }}</td>
+                  <td>{{ p.paymentType }}</td>
+                  <td>{{ p.paymentMethod }}</td>
+                  <td>৳{{ p.amount | number:'1.2-2' }}</td>
+                  <td>{{ p.notes || '—' }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        }
+      }
+
+      @if (viewOnly && memberDetail) {
+        <div class="section-title">🔒 Member Status</div>
+        <div class="info-section">
+          <div class="info-row">
+            <span class="info-label">Active:</span>
+            <span [class]="memberDetail.isActive ? 'badge-active' : 'badge-inactive'">
+              {{ memberDetail.isActive ? "🟢 Yes" : "🔴 No" }}
+            </span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Membership Status:</span>
+            <span class="badge-status">{{ memberDetail.membershipStatus }}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Payment Status:</span>
+            <span class="badge-status">{{ memberDetail.paymentStatus }}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Blocked:</span>
+            <span [class]="memberDetail.isBlocked ? 'badge-inactive' : 'badge-active'">
+              {{ memberDetail.isBlocked ? "🔴 Yes" : "🟢 No" }}
+            </span>
+          </div>
+          @if (memberDetail.isBlocked && memberDetail.blockReason) {
+            <div class="info-row">
+              <span class="info-label">Block Reason:</span>
+              <span class="block-reason">{{ memberDetail.blockReason }}</span>
+            </div>
+          }
+        </div>
+
+        <div class="button-group">
+          <button class="btn-block" disabled title="Block endpoint not yet available">
+            🔴 Block Member
+          </button>
+          <button class="btn-unblock" disabled title="Unblock endpoint not yet available">
+            🟢 Unblock Member
+          </button>
+        </div>
+      }
+    </div>
+  }
+</div>

@@ -1,0 +1,93 @@
+<div class="container">
+  <div class="header">
+    <h2>🗃️ Bulk Shelve Copies</h2>
+    <a routerLink="/admin/physical-copies" class="btn-back">← Back to List</a>
+  </div>
+
+  @if (error) { <div class="alert-error">{{ error }}</div> }
+  @if (success) { <div class="alert-success">{{ success }}</div> }
+
+  <div class="layout-grid">
+    <section class="panel">
+      <h3>Target Shelf</h3>
+      <p class="hint">Floor → Section → Rack → Shelf</p>
+
+      <div class="form-group">
+        <label>Floor</label>
+        <select [(ngModel)]="selectedFloorId" (ngModelChange)="onFloorChange()">
+          <option [ngValue]="null">— Select floor —</option>
+          @for (f of floors; track f.floorId) {
+            <option [ngValue]="f.floorId">{{ f.floorName || f.floorCode }}</option>
+          }
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>Section</label>
+        <select [(ngModel)]="selectedSectionId" (ngModelChange)="onSectionChange()">
+          <option [ngValue]="null">— Select section —</option>
+          @for (s of filteredSections; track s.sectionId) {
+            <option [ngValue]="s.sectionId">{{ s.sectionCode }} — {{ s.sectionName }}</option>
+          }
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>Rack</label>
+        <select [(ngModel)]="selectedRackId" (ngModelChange)="onRackChange()">
+          <option [ngValue]="null">— Select rack —</option>
+          @for (r of filteredRacks; track r.rackId) {
+            <option [ngValue]="r.rackId">{{ r.rackCode }} — {{ r.rackName }}</option>
+          }
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>Target Shelf <span class="required">*</span></label>
+        <select [(ngModel)]="targetShelfId">
+          <option [ngValue]="null" disabled>Select shelf</option>
+          @for (sh of filteredShelves; track sh.shelfId) {
+            <option [ngValue]="sh.shelfId">{{ sh.shelfCode }} (max {{ sh.maxCapacity }})</option>
+          }
+        </select>
+      </div>
+
+      <div class="form-actions">
+        <button class="btn-save" (click)="submit()" [disabled]="submitting || !selectedCopyIds.size">
+          {{ submitting ? 'Shelving...' : 'Shelve ' + selectedCopyIds.size + ' Selected' }}
+        </button>
+        <button class="btn-cancel" (click)="cancel()" [disabled]="submitting">Cancel</button>
+      </div>
+    </section>
+
+    <section class="panel copies-panel">
+      <div class="panel-head">
+        <h3>Unshelved Copies ({{ unshelvedCopies.length }})</h3>
+        <input type="text" [(ngModel)]="searchTerm" placeholder="Filter copies..." class="search-input" />
+      </div>
+
+      @if (loading) { <p class="loading-text">Loading copies...</p> }
+      @if (!loading && filteredCopies.length === 0) {
+        <p class="empty-text">No unshelved copies available.</p>
+      }
+
+      @if (!loading && filteredCopies.length > 0) {
+        <label class="select-all">
+          <input type="checkbox" [checked]="allFilteredSelected" (change)="toggleSelectAll()" />
+          Select all shown ({{ filteredCopies.length }})
+        </label>
+        <ul class="copy-list">
+          @for (c of filteredCopies; track c.physicalCopyId) {
+            <li>
+              <label>
+                <input type="checkbox" [checked]="isSelected(c.physicalCopyId)" (change)="toggleCopy(c.physicalCopyId)" />
+                <span class="copy-title">{{ c.bookTitle }} — {{ c.editionInfo }}</span>
+                <span class="copy-meta">{{ c.fullLibraryCode }} · {{ c.barcode }}</span>
+              </label>
+            </li>
+          }
+        </ul>
+      }
+    </section>
+  </div>
+</div>

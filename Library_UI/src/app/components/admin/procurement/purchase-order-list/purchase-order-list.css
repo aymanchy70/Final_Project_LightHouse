@@ -1,0 +1,75 @@
+.list-container {
+  padding: 1.5rem;
+}
+
+.toolbar {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.search-box input {
+  padding: 0.5rem;
+  width: 250px;
+}
+
+.status-filter {
+  padding: 0.5rem;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1rem;
+}
+
+.data-table th, .data-table td {
+  border: 1px solid #ddd;
+  padding: 0.5rem;
+  text-align: left;
+}
+
+.data-table th {
+  cursor: pointer;
+  background-color: #f4f4f4;
+  color: #111111;
+  font-weight: 700;
+}
+
+.actions {
+  white-space: nowrap;
+}
+
+.actions .btn {
+  margin-right: 0.25rem;
+}
+
+.status-chip {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.chip-pending   { background: #fef3c7; color: #92400e; }
+.chip-approved  { background: #d1fae5; color: #065f46; }
+.chip-partial   { background: #bfdbfe; color: #1e3a8a; }
+.chip-completed { background: #c3e6cb; color: #155724; }
+.chip-cancelled { background: #fce4ec; color: #c62828; }
+
+.btn-approve { background-color: #059669; color: white; }
+.btn-receive { background-color: #2563eb; color: white; }
+.btn-danger   { background-color: #dc2626; color: white; }
+
+.error-message, .success-message {
+  padding: 0.5rem 1rem;
+  margin-bottom: 1rem;
+  border-radius: 4px;
+}
+
+.error-message   { background: #f8d7da; color: #b71c1c; }
+.success-message { background: #d4edda; color: #155724; }

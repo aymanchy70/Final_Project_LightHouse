@@ -1,0 +1,70 @@
+<div class="container">
+  <div class="header">
+    <h2>📗 Physical Copies</h2>
+    <div class="header-actions">
+      <a routerLink="/admin/physical-copies/add" class="btn-add">+ Register Copy</a>
+    </div>
+  </div>
+
+  <div class="toolbar">
+    <input type="text" [(ngModel)]="searchTerm" (input)="refresh()"
+      placeholder=" Search title, barcode, shelf, code..." class="search-input" />
+    <div class="status-tabs">
+      @for (s of statusOptions; track s) {
+        <button class="tab-btn" [class.active]="statusFilter === s"
+          (click)="statusFilter = s; refresh()">{{ s }}</button>
+      }
+    </div>
+  </div>
+
+  @if (error) { <div class="alert-error">{{ error }}</div> }
+  @if (successMessage) { <div class="alert-success">{{ successMessage }}</div> }
+  @if (loading) { <div class="alert-info">Loading...</div> }
+  @if (!loading && filtered.length === 0 && !error) {
+    <div class="alert-warning">No physical copies found.</div>
+  }
+
+  @if (!loading && filtered.length > 0) {
+    <table>
+      <thead>
+        <tr>
+          <th class="sortable" (click)="sortBy('physicalCopyId')"># {{ icon('physicalCopyId') }}</th>
+          <th class="sortable" (click)="sortBy('bookTitle')">Book {{ icon('bookTitle') }}</th>
+          <th>Edition</th>
+          <th class="sortable" (click)="sortBy('barcode')">Barcode {{ icon('barcode') }}</th>
+          <th>Library Code</th>
+          <th>Shelf</th>
+          <th class="sortable" (click)="sortBy('status')">Status {{ icon('status') }}</th>
+          <th>Condition</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (item of paged; track item.physicalCopyId) {
+          <tr>
+            <td>{{ item.physicalCopyId }}</td>
+            <td><strong>{{ item.bookTitle || '—' }}</strong></td>
+            <td>{{ item.editionInfo || '—' }}</td>
+            <td><code>{{ item.barcode || '—' }}</code></td>
+            <td><code>{{ item.fullLibraryCode || '—' }}</code></td>
+            <td>{{ item.shelfCode || 'Unshelved' }}</td>
+            <td><span [class]="statusBadgeClass(item.status)">{{ item.status || '—' }}</span></td>
+            <td>{{ item.currentCondition || '—' }}</td>
+            <td class="actions">
+              <button (click)="details(item.physicalCopyId)" class="btn-details">Details</button>
+              <button (click)="edit(item.physicalCopyId)" class="btn-edit">Edit</button>
+              <button (click)="delete(item.physicalCopyId)" class="btn-delete">Deactivate</button>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+    <app-pagination
+      [currentPage]="currentPage"
+      [totalItems]="filtered.length"
+      [pageSize]="pageSize"
+      (pageChanged)="onPageChanged($event)"
+      (pageSizeChanged)="onPageSizeChanged($event)">
+    </app-pagination>
+  }
+</div>

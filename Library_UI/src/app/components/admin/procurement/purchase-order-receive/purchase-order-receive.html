@@ -1,0 +1,103 @@
+<div class="po-page">
+  <!-- Top bar -->
+  <div class="po-topbar">
+    <div class="po-topbar-left">
+      <span class="po-topbar-title">📥 Receive Items</span>
+      <span class="po-topbar-sub">PO: {{ po?.po_Number }} | {{ po?.supplierName }}</span>
+    </div>
+    <div class="po-topbar-actions">
+      <button (click)="submit()" [disabled]="submitting || totalNewReceiveQty === 0" class="btn-save">
+        {{ submitting ? 'Saving...' : ' Receive' }}
+      </button>
+      <button (click)="cancel()" class="btn-cancel-top">✕ Cancel</button>
+    </div>
+  </div>
+
+  @if (error)   { <div class="alert alert-error">{{ error }}</div> }
+  @if (success) { <div class="alert alert-success"> {{ success }}</div> }
+
+  <!-- Receive info -->
+  <div class="po-panel">
+    <div class="field-grid">
+      <div class="field-row">
+        <label class="field-label">PO Number</label>
+        <span class="field-sep">:</span>
+        <div class="field-value readonly-val">{{ po?.po_Number }}</div>
+      </div>
+      <div class="field-row">
+        <label class="field-label">Supplier</label>
+        <span class="field-sep">:</span>
+        <div class="field-value readonly-val">{{ po?.supplierName }}</div>
+      </div>
+      <div class="field-row">
+        <label class="field-label">Receive Date <span class="req">*</span></label>
+        <span class="field-sep">:</span>
+        <div class="field-value">
+          <input type="date" [(ngModel)]="receiveDate" class="f-input" />
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Items grid -->
+  <div class="po-panel" style="margin-top:14px">
+    <div class="section-bar">
+      <span class="section-title">Received Items</span>
+    </div>
+    <div class="grid-wrap">
+      <table class="data-grid">
+        <thead>
+          <tr class="grid-head">
+            <th>SL</th>
+            <th>Book Title</th>
+            <th>Edition</th>
+            <th>Ordered</th>
+            <th>Already Received</th>
+            <th>Remaining</th>
+            <th>New Receive Qty</th>
+            <th>Shelf (Location)</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (item of receiveItems; track item.purchaseOrderItemId; let i = $index) {
+            <tr class="grid-row">
+              <td class="center">{{ i + 1 }}</td>
+              <td>{{ item.bookTitle }}</td>
+              <td>{{ item.edition || '—' }}</td>
+              <td class="center">{{ item.orderedQty }}</td>
+              <td class="center">{{ item.receivedQty }}</td>
+              <td class="center">{{ item.remainingQty }}</td>
+              <td>
+                <input
+                  type="number"
+                  [(ngModel)]="item.newReceiveQty"
+                  [min]="0"
+                  [max]="item.remainingQty"
+                  class="grid-input qty-input"
+                  [disabled]="item.receivedQty >= item.orderedQty"
+                />
+              </td>
+              <td>
+                <select
+                  [(ngModel)]="item.shelfId"
+                  class="f-select"
+                  [disabled]="item.newReceiveQty <= 0 || item.receivedQty >= item.orderedQty"
+                >
+                  <option [value]="null">— Select Shelf —</option>
+                  @for (shelf of shelves; track shelf.shelfId) {
+                    <option [value]="shelf.shelfId">
+                      {{ shelf.shelfCode }} ({{ shelf.floorCode || '' }}{{shelf.sectionCode ? '/'+shelf.sectionCode : ''}}{{shelf.rackCode ? '/'+shelf.rackCode : ''}})
+                    </option>
+                  }
+                </select>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    <div class="grid-footer">
+      <span class="row-count">Total items to receive: {{ totalNewReceiveQty }}</span>
+    </div>
+  </div>
+</div>

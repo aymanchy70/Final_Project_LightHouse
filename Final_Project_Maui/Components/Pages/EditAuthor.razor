@@ -1,0 +1,75 @@
+﻿@page "/authors/edit/{id:int}"
+@using Final_Project_Maui.Models
+@using Final_Project_Maui.Services
+@inject AuthorService AuthorService
+@inject NavigationManager Navigation
+
+<h3>Edit Author</h3>
+
+@if (author == null)
+{
+    <p>Loading...</p>
+}
+else
+{
+    <EditForm Model="@author" OnValidSubmit="HandleValidSubmit">
+        <DataAnnotationsValidator />
+        <ValidationSummary class="text-danger" />
+
+        <div class="mb-3">
+            <label class="form-label">Full Name *</label>
+            <InputText class="form-control" @bind-Value="author.FullName" />
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Pseudonym</label>
+            <InputText class="form-control" @bind-Value="author.Pseudonym" />
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Date of Birth</label>
+            <InputDate class="form-control" @bind-Value="author.DateOfBirth" />
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Date of Death</label>
+            <InputDate class="form-control" @bind-Value="author.DateOfDeath" />
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Nationality</label>
+            <InputText class="form-control" @bind-Value="author.Nationality" />
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Biography</label>
+            <InputTextArea class="form-control" @bind-Value="author.Biography" />
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Email</label>
+            <InputText class="form-control" @bind-Value="author.Email" />
+        </div>
+
+        <button type="submit" class="btn btn-success">Save</button>
+        <button type="button" class="btn btn-secondary" @onclick="Cancel">Cancel</button>
+    </EditForm>
+}
+
+@code {
+    [Parameter] public int id { get; set; }
+    private AuthorDto? author;
+
+    protected override async Task OnInitializedAsync()
+    {
+        author = await AuthorService.GetAuthorByIdAsync(id);
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        if (author != null)
+        {
+            await AuthorService.UpdateAuthorAsync(id, author);
+            Navigation.NavigateTo("/authors");
+        }
+    }
+
+    private void Cancel()
+    {
+        Navigation.NavigateTo("/authors");
+    }
+}

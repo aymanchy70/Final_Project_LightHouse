@@ -1,0 +1,122 @@
+<div class="admin-wrapper">
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <h1>📚 LibraryUI</h1>
+      <p>Admin Panel</p>
+    </div>
+
+    <div class="sidebar-user">
+      <div class="user-avatar">👤</div>
+      <div class="user-info">
+        <span class="user-email">{{ userEmail }}</span>
+        <span class="user-role">Administrator</span>
+      </div>
+    </div>
+
+    <nav class="sidebar-nav">
+
+      <!-- Dashboard (no section) -->
+      <a routerLink="/admin/dashboard" routerLinkActive="active" class="nav-item">
+        <span class="nav-icon">🏠</span> Dashboard
+      </a>
+
+      <!-- ── LOCATION ── -->
+      <button class="nav-section-toggle" (click)="toggle('location')">
+        <span class="section-label">📍 Location</span>
+        <span class="section-arrow" [class.open]="sections['location']">›</span>
+      </button>
+      <div class="nav-group" [class.expanded]="sections['location']">
+        <a routerLink="/admin/location/tree"     routerLinkActive="active" class="nav-item child">🗺️ Location Tree</a>
+        <a routerLink="/admin/location/floors"   routerLinkActive="active" class="nav-item child">🏢 Floors</a>
+        <a routerLink="/admin/location/sections" routerLinkActive="active" class="nav-item child">📑 Sections</a>
+        <a routerLink="/admin/location/racks"    routerLinkActive="active" class="nav-item child">🗄️ Racks</a>
+        <a routerLink="/admin/location/shelves"  routerLinkActive="active" class="nav-item child">🗃️ Shelves</a>
+      </div>
+
+      <!-- ── CATALOG ── -->
+      <button class="nav-section-toggle" (click)="toggle('catalog')">
+        <span class="section-label">📚 Catalog</span>
+        <span class="section-arrow" [class.open]="sections['catalog']">›</span>
+      </button>
+      <div class="nav-group" [class.expanded]="sections['catalog']">
+        <a routerLink="/admin/item-categories" routerLinkActive="active" class="nav-item child">📂 Item Categories</a>
+        <a routerLink="/admin/sub-categories"  routerLinkActive="active" class="nav-item child">📁 Sub Categories</a>
+        <a routerLink="/admin/authors"         routerLinkActive="active" class="nav-item child">✍️ Authors</a>
+        <a routerLink="/admin/publishers"      routerLinkActive="active" class="nav-item child">🏢 Publishers</a>
+        <a routerLink="/admin/books"           routerLinkActive="active" class="nav-item child">📚 Books</a>
+        <a routerLink="/admin/book-editions"   routerLinkActive="active" class="nav-item child">📖 Book Editions</a>
+        <a routerLink="/admin/physical-copies" routerLinkActive="active" class="nav-item child">📗 Physical Copies</a>
+      </div>
+
+      <!-- ── MEMBERS ── -->
+      <button class="nav-section-toggle" (click)="toggle('members')">
+        <span class="section-label">👥 Members</span>
+        <span class="section-arrow" [class.open]="sections['members']">›</span>
+      </button>
+      <div class="nav-group" [class.expanded]="sections['members']">
+        <a routerLink="/admin/membership-types" routerLinkActive="active" class="nav-item child">🎫 Membership Types</a>
+        <a routerLink="/admin/fine-rules"       routerLinkActive="active" class="nav-item child">💰 Fine Rules</a>
+        <a routerLink="/admin/members"          routerLinkActive="active" class="nav-item child">👤 Members</a>
+      </div>
+
+      <!-- ── CIRCULATION ── -->
+      <button class="nav-section-toggle" (click)="toggle('circulation')">
+        <span class="section-label">🔄 Circulation</span>
+        <span class="section-arrow" [class.open]="sections['circulation']">›</span>
+      </button>
+      <div class="nav-group" [class.expanded]="sections['circulation']">
+        <a routerLink="/admin/circulation"         routerLinkActive="active" [routerLinkActiveOptions]="{exact:true}" class="nav-item child">📋 Borrowing List</a>
+        <a routerLink="/admin/circulation/request" routerLinkActive="active" class="nav-item child">➕ New Request</a>
+        <a routerLink="/admin/payments"     routerLinkActive="active" class="nav-item child">💳 Payments</a>
+        <a routerLink="/admin/reservations" routerLinkActive="active" class="nav-item child">📌 Reservations</a>
+      </div>
+
+      <!-- ── ACQUISITIONS ── -->
+      <button class="nav-section-toggle" (click)="toggle('acquisitions')">
+        <span class="section-label">🛒 Acquisitions</span>
+        <span class="section-arrow" [class.open]="sections['acquisitions']">›</span>
+      </button>
+      <div class="nav-group" [class.expanded]="sections['acquisitions']">
+        <a routerLink="/admin/suppliers"       routerLinkActive="active" class="nav-item child">🏭 Suppliers</a>
+        <a routerLink="/admin/purchase-orders" routerLinkActive="active" class="nav-item child">📋 Purchase Orders</a>
+      </div>
+
+      <!-- ── INVENTORY ── -->
+      <button class="nav-section-toggle" (click)="toggle('inventory')">
+        <span class="section-label">📋 Inventory</span>
+        <span class="section-arrow" [class.open]="sections['inventory']">›</span>
+      </button>
+      <div class="nav-group" [class.expanded]="sections['inventory']">
+        <a routerLink="/admin/grn" routerLinkActive="active" class="nav-item child">📦 GRN</a>
+      </div>
+      
+      <!-- ── REPORTS ── -->
+      <button class="nav-section-toggle" (click)="toggle('reports')">
+        <span class="section-label">🖨️ Reports</span>
+        <span class="section-arrow" [class.open]="sections['reports']">›</span>
+      </button>
+      <div class="nav-group" [class.expanded]="sections['reports']">
+        <a routerLink="/admin/reports" routerLinkActive="active" class="nav-item child">🖨️ Reports Center</a>
+      </div>
+
+      <!-- ── SYSTEM ── -->
+      <button class="nav-section-toggle" (click)="toggle('system')">
+        <span class="section-label">⚙️ System</span>
+        <span class="section-arrow" [class.open]="sections['system']">›</span>
+      </button>
+      <div class="nav-group" [class.expanded]="sections['system']">
+        <a routerLink="/admin/role-manager" routerLinkActive="active" class="nav-item child">🔐 Role Manager</a>
+      </div>
+
+    </nav>
+
+    <div class="sidebar-footer">
+      <button (click)="logout()" class="btn-logout">🚪 Logout</button>
+    </div>
+  </aside>
+
+  <main class="main-content">
+    <app-toast></app-toast>
+    <router-outlet></router-outlet>
+  </main>
+</div>

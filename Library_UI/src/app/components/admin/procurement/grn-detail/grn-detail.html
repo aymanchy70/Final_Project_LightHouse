@@ -1,0 +1,197 @@
+<div class="po-container">
+
+  <div class="po-header-bar">
+    <div>
+      <h2>GRN Detail</h2>
+      @if (grn) {
+        <p class="subtitle">
+          {{ grn.gRN_Number }}
+          &nbsp;
+          <span class="detail-status-badge detail-status-{{ (grn.status || 'pending') | lowercase }}">
+            {{ grn.status || 'Pending' }}
+          </span>
+        </p>
+      }
+    </div>
+    <div style="display:flex; gap:10px; align-items:center;">
+      @if (grn && (grn.status || 'Pending') === 'Pending') {
+        <button (click)="goInspect()" class="btn-inspect-action"> Inspect &amp; Approve</button>
+      }
+      <button (click)="goReport()" class="btn-report">🖨️ Print Report</button>
+      <button (click)="back()" class="btn-back">← Back to List</button>
+    </div>
+  </div>
+
+  @if (error)   { <div class="alert-error">{{ error }}</div> }
+  @if (loading) { <div class="alert-info"> Loading...</div> }
+
+  @if (!loading && grn) {
+    <div class="po-layout">
+
+      <div class="po-master">
+        <div class="po-document">
+
+          <!-- Header -->
+          <div class="po-doc-header">
+            <div class="po-logo-area">
+              <div class="po-logo-box">📚</div>
+              <div>
+                <div class="po-company-name">Library Management System</div>
+                <div class="po-company-sub">Goods Received Note</div>
+              </div>
+            </div>
+            <div class="po-title-area">
+              <div class="po-doc-title">GRN</div>
+              <div class="po-doc-meta">GRN #: <em>{{ grn.gRN_Number }}</em></div>
+              <div class="po-doc-meta">DATE: {{ grn.receivedDate | date:'mediumDate' }}</div>
+            </div>
+          </div>
+
+          <hr class="po-divider" />
+
+          <!-- Info Grid -->
+          <div class="po-info-grid">
+            <div class="po-box">
+              <div class="po-box-label">📋 RECEIVING INFO</div>
+              <div class="detail-row"><span>Received Date</span><strong>{{ grn.receivedDate | date:'mediumDate' }}</strong></div>
+              <div class="detail-row"><span>Received By</span><strong>{{ grn.receivedBy || '—' }}</strong></div>
+              <div class="detail-row"><span>Vehicle Number</span><strong>{{ grn.vehicleNumber || '—' }}</strong></div>
+              <div class="detail-row"><span>Delivery Person</span><strong>{{ grn.deliveryPersonName || '—' }}</strong></div>
+            </div>
+            <div class="po-box">
+              <div class="po-box-label">📝 NOTES</div>
+              <div style="color:#475569; font-size:13px; line-height:1.6;">{{ grn.notes || 'No notes.' }}</div>
+            </div>
+          </div>
+
+          <hr class="po-divider" />
+
+          <!-- Items Table -->
+          <div class="po-section-label">RECEIVED ITEMS</div>
+          <div class="items-table-wrap">
+            <table class="items-table">
+              <thead>
+                <tr>
+                  <th>PO Number</th>
+                  <th>Book Title</th>
+                  <th>Edition</th>
+                  <th>Quantity</th>
+                  <th>Shelf Location</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (item of grn.items; track item.grnItemId) {
+                  <tr>
+                    <td><span class="po-badge">{{ item.pO_Number || '—' }}</span></td>
+                    <td>
+                      <div class="item-title">{{ item.bookTitle }}</div>
+                    </td>
+                    <td>{{ item.edition || '—' }}</td>
+                    <td class="center-cell">{{ item.quantity }}</td>
+                    <td>
+                      @if (item.shelfCode) {
+                        <span class="shelf-badge">📍 {{ item.shelfCode }}</span>
+                      } @else {
+                        <span style="color:#94a3b8;">—</span>
+                      }
+                    </td>
+                  </tr>
+                }
+              </tbody>
+              <tfoot>
+                <tr>
+                  <td colspan="3" class="total-label">TOTAL ITEMS RECEIVED</td>
+                  <td class="grand-total">{{ getTotalQuantity() }}</td>
+                  <td></td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+
+          <!-- Inspection Results (shown only when inspected/approved) -->
+          @if (grn.inspectionDate || grn.inspectedBy) {
+            <hr class="po-divider" />
+            <div class="po-section-label"> INSPECTION RESULTS</div>
+            <div class="po-info-grid">
+              <div class="po-box">
+                <div class="po-box-label">📋 INSPECTION INFO</div>
+                <div class="detail-row"><span>Inspection Date</span><strong>{{ grn.inspectionDate | date:'mediumDate' }}</strong></div>
+                <div class="detail-row"><span>Inspected By</span><strong>{{ grn.inspectedBy || '—' }}</strong></div>
+                <div class="detail-row"><span>Decision</span>
+                  <strong><span class="detail-status-badge detail-status-{{ (grn.status || '') | lowercase }}">{{ grn.status }}</span></strong>
+                </div>
+              </div>
+              <div class="po-box">
+                <div class="po-box-label">📝 INSPECTION NOTES</div>
+                <div style="color:#475569; font-size:13px; line-height:1.6;">{{ grn.inspectionNotes || 'No inspection notes.' }}</div>
+              </div>
+            </div>
+            @if (grn.items && grn.items[0]?.condition) {
+              <div class="items-table-wrap">
+                <table class="items-table">
+                  <thead>
+                    <tr>
+                      <th>Book</th>
+                      <th>Received Qty</th>
+                      <th>Accepted Qty</th>
+                      <th>Condition</th>
+                      <th>Item Notes</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (item of grn.items; track item.grnItemId) {
+                      <tr>
+                        <td>
+                          <div class="item-title">{{ item.bookTitle }}</div>
+                          <div style="font-size:11px;color:#94a3b8;">{{ item.edition || '' }}</div>
+                        </td>
+                        <td class="center-cell">{{ item.quantity }}</td>
+                        <td class="center-cell">{{ item.acceptedQuantity ?? item.quantity }}</td>
+                        <td><span class="condition-badge condition-{{ (item.condition || 'good') | lowercase }}">{{ item.condition || 'Good' }}</span></td>
+                        <td style="font-size:12px;color:#64748b;">{{ item.itemNotes || '—' }}</td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            }
+          }
+
+        </div>
+      </div>
+      <div class="po-sidebar">
+        <div class="summary-card">
+          <div class="summary-title">📊 Summary</div>
+          <div class="summary-row"><span>GRN Number</span><strong>{{ grn.grn_Number || grn.grnNumber || grn.grn_number || ('GRN-' + grn.grnId) }}</strong></div>
+          <div class="summary-divider"></div>
+          <div class="summary-row"><span>Status</span>
+            <span class="detail-status-badge detail-status-{{ (grn.status || 'pending') | lowercase }}">{{ grn.status || 'Pending' }}</span>
+          </div>
+          <div class="summary-divider"></div>
+          <div class="summary-row"><span>Received Date</span><strong>{{ grn.receivedDate | date:'mediumDate' }}</strong></div>
+          <div class="summary-row"><span>Received By</span><strong>{{ grn.receivedBy || '—' }}</strong></div>
+          <div class="summary-row"><span>Vehicle</span><strong>{{ grn.vehicleNumber || '—' }}</strong></div>
+          <div class="summary-divider"></div>
+          <div class="summary-row"><span>Total Items</span><strong>{{ grn.items?.length || 0 }}</strong></div>
+          <div class="summary-row grand"><span>Total Quantity</span><strong>{{ getTotalQuantity() }}</strong></div>
+        </div>
+
+        <div class="summary-card">
+          <div class="summary-title">📚 Items</div>
+          @for (item of grn.items; track item.grnItemId) {
+            <div class="preview-item">
+              <div class="preview-title">{{ item.bookTitle }}</div>
+              <div class="preview-meta">
+                {{ item.pO_Number || '—' }} &nbsp;·&nbsp; Qty: {{ item.quantity }}
+              </div>
+              @if (item.shelfCode) {
+                <div class="preview-meta">📍 {{ item.shelfCode }}</div>
+              }
+            </div>
+          }
+        </div>
+      </div>
+
+    </div>
+  }
+</div>

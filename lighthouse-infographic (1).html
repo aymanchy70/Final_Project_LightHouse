@@ -1,0 +1,694 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lighthouse Library — System Overview</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: Arial, sans-serif; font-size: 13px; color: #111; background: #f0f2f5; padding: 24px; }
+@media print {
+  body { background: white; padding: 0; }
+  .no-print { display: none !important; }
+  .erp-wrap { page-break-inside: avoid; margin-bottom: 16px; }
+}
+.toolbar { display:flex; align-items:center; justify-content:space-between; background:white; border:1px solid #ddd; border-radius:8px; padding:12px 20px; margin-bottom:20px; box-shadow:0 2px 8px rgba(0,0,0,0.06); }
+.toolbar-brand { display:flex; align-items:center; gap:10px; }
+.toolbar-icon { width:40px; height:40px; background:#006D6F; border-radius:8px; display:flex; align-items:center; justify-content:center; }
+.btn { display:inline-flex; align-items:center; gap:6px; padding:8px 16px; border-radius:6px; border:1px solid #ddd; font-size:12px; font-weight:bold; cursor:pointer; background:white; color:#333; }
+.btn-red { background:#C0392B; color:white; border-color:#C0392B; }
+.btn-group { display:flex; gap:8px; }
+.page { max-width:1100px; margin:0 auto; }
+.erp-wrap { border:1.5px solid #1a2e3b; border-radius:8px; margin-bottom:24px; overflow:hidden; background:white; box-shadow:0 2px 8px rgba(0,0,0,0.06); }
+.erp-head { background:#1a2e3b; color:white; padding:11px 18px; font-size:13px; font-weight:bold; letter-spacing:.04em; text-align:center; }
+.erp-sub { background:#006D6F; color:white; font-size:11px; text-align:center; padding:4px 12px; }
+.col-head { padding:8px; font-size:11px; font-weight:bold; text-align:center; border-right:1px solid #ddd; border-bottom:1px solid #ddd; line-height:1.4; }
+.col-head:last-child { border-right:none; }
+.col-body { padding:10px 8px; border-right:1px solid #ddd; border-top:1px solid #ddd; }
+.col-body:last-child { border-right:none; }
+.step-box { background:white; border:1px solid #ccc; border-radius:4px; padding:8px 10px; margin-bottom:8px; font-size:11.5px; line-height:1.45; text-align:center; }
+.step-box strong { display:block; font-size:11px; margin-bottom:2px; }
+.step-box span { font-size:10.5px; color:#555; }
+.arrow-down { text-align:center; font-size:16px; color:#888; margin:3px 0; }
+.flow-connector { display:flex; align-items:center; justify-content:center; color:#888; font-size:20px; }
+.step-num { width:28px; height:28px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:bold; color:white; margin:0 auto 6px; flex-shrink:0; }
+.flow-step { text-align:center; padding:0 4px; }
+.flow-label { font-size:10px; color:#888; margin-top:4px; }
+.feature-bar { display:grid; border-top:2px solid #1a2e3b; background:#1a2e3b; }
+.feature-bar-item { padding:9px 14px; display:flex; align-items:center; gap:8px; border-right:1px solid #333; color:white; font-size:11px; }
+.feature-bar-item:last-child { border-right:none; }
+.badge-alert { background:#e53935; color:white; font-size:10px; font-weight:bold; padding:2px 6px; border-radius:3px; flex-shrink:0; }
+.overdue-banner { margin-top:14px; display:flex; align-items:center; gap:10px; background:#fef9f9; border-radius:4px; padding:10px 12px; border:1px solid #ffd0cc; }
+.mod-box { border:1.5px solid #ccc; border-radius:6px; padding:12px 8px; text-align:center; background:white; }
+.mod-title { font-size:11px; font-weight:bold; color:#1a2e3b; margin-top:6px; }
+.mod-sub { font-size:10px; color:#666; margin-top:3px; line-height:1.4; }
+.tech-item { background:#1a2e3b; color:white; border-radius:4px; padding:10px; text-align:center; font-size:11px; }
+.tech-item i { font-size:20px; display:block; margin-bottom:4px; }
+.tech-item strong { display:block; }
+.tech-item span { color:#aaa; font-size:10px; }
+
+/* ── Illustration containers ────────────────── */
+.illus-row { display:grid; gap:0; background:white; }
+.illus-cell { display:flex; flex-direction:column; align-items:center; justify-content:flex-start; padding:16px 10px; border-right:1px dashed #ddd; }
+.illus-cell:last-child { border-right:none; }
+.illus-label { font-size:10.5px; font-weight:bold; text-align:center; margin-top:8px; line-height:1.4; }
+.illus-sub { font-size:10px; color:#666; text-align:center; margin-top:3px; line-height:1.35; }
+.arrow-connector { display:flex; align-items:center; justify-content:center; font-size:22px; color:#aaa; }
+</style>
+</head>
+<body>
+
+<!-- TOOLBAR -->
+<div class="toolbar no-print">
+  <div class="toolbar-brand">
+    <div class="toolbar-icon">
+      <!-- SVG: open book -->
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
+      </svg>
+    </div>
+    <div>
+      <div style="font-size:15px;font-weight:bold;color:#1a2e3b;">Lighthouse Library Management System</div>
+      <div style="font-size:11px;color:#666;">System Overview — ERP Workflow Infographic &nbsp;|&nbsp; Team 404Squad &nbsp;|&nbsp; Round 67</div>
+    </div>
+  </div>
+  <div class="btn-group">
+    <button class="btn" onclick="window.print()"><i class="ti ti-printer"></i> Print</button>
+    <button class="btn btn-red" onclick="savePDF()"><i class="ti ti-file-type-pdf"></i> Save as PDF</button>
+  </div>
+</div>
+
+<div class="page">
+
+<!-- ══════════════════════════════════════════════════ -->
+<!-- ILLUSTRATION ROW 1 — System actors                 -->
+<!-- ══════════════════════════════════════════════════ -->
+<div class="erp-wrap">
+  <div class="erp-head">LIGHTHOUSE LIBRARY MANAGEMENT SYSTEM — SYSTEM ACTORS & ROLES</div>
+  <div class="illus-row" style="grid-template-columns:1fr 40px 1fr 40px 1fr 40px 1fr 40px 1fr;">
+
+    <!-- Member -->
+    <div class="illus-cell" style="background:#f9fefe;">
+      <svg width="64" height="64" viewBox="0 0 64 64" fill="none">
+        <circle cx="32" cy="32" r="30" fill="#e8f5f5" stroke="#006D6F" stroke-width="1.5"/>
+        <circle cx="32" cy="24" r="9" fill="#006D6F" opacity=".85"/>
+        <path d="M14 52c0-9.9 8.1-18 18-18s18 8.1 18 18" stroke="#006D6F" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+        <rect x="22" y="38" width="20" height="3" rx="1.5" fill="#006D6F" opacity=".3"/>
+      </svg>
+      <div class="illus-label" style="color:#006D6F;">Member / Reader</div>
+      <div class="illus-sub">Browses, borrows,<br>pays fines, reports</div>
+    </div>
+
+    <div class="arrow-connector">→</div>
+
+    <!-- System -->
+    <div class="illus-cell" style="background:#f3f8ff;">
+      <svg width="64" height="64" viewBox="0 0 64 64" fill="none">
+        <circle cx="32" cy="32" r="30" fill="#e3f2fd" stroke="#1565C0" stroke-width="1.5"/>
+        <rect x="16" y="18" width="32" height="22" rx="3" fill="#1565C0" opacity=".15" stroke="#1565C0" stroke-width="1.5"/>
+        <rect x="20" y="22" width="24" height="14" rx="2" fill="#1565C0" opacity=".25"/>
+        <rect x="26" y="40" width="12" height="3" rx="1.5" fill="#1565C0" opacity=".5"/>
+        <rect x="22" y="44" width="20" height="2" rx="1" fill="#1565C0" opacity=".3"/>
+        <circle cx="32" cy="29" r="4" fill="#1565C0" opacity=".7"/>
+      </svg>
+      <div class="illus-label" style="color:#1565C0;">Lighthouse System</div>
+      <div class="illus-sub">React (member) +<br>Angular (admin)</div>
+    </div>
+
+    <div class="arrow-connector">→</div>
+
+    <!-- Admin -->
+    <div class="illus-cell" style="background:#fff3e0;">
+      <svg width="64" height="64" viewBox="0 0 64 64" fill="none">
+        <circle cx="32" cy="32" r="30" fill="#fff3e0" stroke="#e65100" stroke-width="1.5"/>
+        <circle cx="32" cy="22" r="8" fill="#e65100" opacity=".8"/>
+        <path d="M16 50c0-8.8 7.2-16 16-16s16 7.2 16 16" stroke="#e65100" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+        <path d="M38 18l2 2-2 2" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+        <circle cx="44" cy="44" r="7" fill="#e65100" opacity=".9"/>
+        <path d="M41 44l2 2 4-4" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <div class="illus-label" style="color:#e65100;">Admin / Librarian</div>
+      <div class="illus-sub">Approves, manages,<br>configures roles</div>
+    </div>
+
+    <div class="arrow-connector">→</div>
+
+    <!-- Supplier -->
+    <div class="illus-cell" style="background:#f1f9f1;">
+      <svg width="64" height="64" viewBox="0 0 64 64" fill="none">
+        <circle cx="32" cy="32" r="30" fill="#e8f5e9" stroke="#2e7d32" stroke-width="1.5"/>
+        <rect x="14" y="24" width="28" height="20" rx="2" fill="#2e7d32" opacity=".15" stroke="#2e7d32" stroke-width="1.5"/>
+        <path d="M42 24v-4a4 4 0 0 0-4-4H26a4 4 0 0 0-4 4v4" stroke="#2e7d32" stroke-width="1.5"/>
+        <circle cx="20" cy="46" r="3" fill="#2e7d32" opacity=".7"/>
+        <circle cx="38" cy="46" r="3" fill="#2e7d32" opacity=".7"/>
+        <path d="M20 44h18" stroke="#2e7d32" stroke-width="1.5"/>
+        <rect x="22" y="28" width="12" height="8" rx="1" fill="#2e7d32" opacity=".3"/>
+      </svg>
+      <div class="illus-label" style="color:#2e7d32;">Supplier (External)</div>
+      <div class="illus-sub">Receives PO,<br>ships books, invoices</div>
+    </div>
+
+    <div class="arrow-connector">→</div>
+
+    <!-- Database -->
+    <div class="illus-cell" style="background:#fef6f8;">
+      <svg width="64" height="64" viewBox="0 0 64 64" fill="none">
+        <circle cx="32" cy="32" r="30" fill="#fce4ec" stroke="#880e4f" stroke-width="1.5"/>
+        <ellipse cx="32" cy="21" rx="14" ry="5" fill="#880e4f" opacity=".2" stroke="#880e4f" stroke-width="1.5"/>
+        <path d="M18 21v8c0 2.8 6.3 5 14 5s14-2.2 14-5v-8" stroke="#880e4f" stroke-width="1.5" fill="none"/>
+        <path d="M18 29v8c0 2.8 6.3 5 14 5s14-2.2 14-5v-8" stroke="#880e4f" stroke-width="1.5" fill="none"/>
+        <ellipse cx="32" cy="37" rx="14" ry="5" fill="#880e4f" opacity=".1"/>
+      </svg>
+      <div class="illus-label" style="color:#880e4f;">SQL Server Database</div>
+      <div class="illus-sub">Entity Framework Core,<br>all data persisted</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════ -->
+<!-- CORE WORKFLOW TABLE                                -->
+<!-- ══════════════════════════════════════════════════ -->
+<div class="erp-wrap">
+  <div class="erp-head">LIGHTHOUSE LIBRARY — CORE WORKFLOW OVERVIEW</div>
+  <div style="display:grid;grid-template-columns:repeat(5,1fr);">
+    <div class="col-head" style="background:#e8f5f5;color:#006D6F;">MEMBER (Reader)</div>
+    <div class="col-head" style="background:#e3f2fd;color:#1565C0;">ADMIN / LIBRARIAN</div>
+    <div class="col-head" style="background:#fff3e0;color:#e65100;">SUPPLIER (External)</div>
+    <div class="col-head" style="background:#e8f5e9;color:#2e7d32;">STOCK & SHELVES</div>
+    <div class="col-head" style="background:#fce4ec;color:#880e4f;">ACCOUNTS & FINANCE</div>
+    <div class="col-body" style="background:#f9fefe;">
+      <div class="step-box"><strong style="color:#006D6F;">1. Browse catalogue</strong><span>Search by DDC, category, title</span></div>
+      <div class="arrow-down">↓</div>
+      <div class="step-box"><strong style="color:#006D6F;">2. Request borrow</strong><span>Physical copy or PDF preview</span></div>
+      <div class="arrow-down">↓</div>
+      <div class="step-box" style="background:#fdecea;border-color:#e53935;"><strong style="color:#b71c1c;">If overdue</strong><span>Fine auto-calculated per day</span></div>
+      <div class="arrow-down">↓</div>
+      <div class="step-box"><strong style="color:#006D6F;">5. Pay fine / fee</strong><span>Online or at counter</span></div>
+    </div>
+    <div class="col-body" style="background:#f3f8ff;">
+      <div class="step-box"><strong style="color:#1565C0;">3. Approve / Reject</strong><span>Set due date (e.g. 14 days)</span></div>
+      <div class="arrow-down">↓</div>
+      <div class="step-box"><strong style="color:#1565C0;">Create Purchase Order</strong><span>Select supplier, items, qty</span></div>
+      <div class="arrow-down">↓</div>
+      <div class="step-box"><strong style="color:#1565C0;">Approve PO</strong><span>PO sent to supplier</span></div>
+      <div class="arrow-down">↓</div>
+      <div class="step-box"><strong style="color:#1565C0;">Receive GRN</strong><span>Inspect returned books</span></div>
+    </div>
+    <div class="col-body" style="background:#fffbf5;">
+      <div class="step-box"><strong style="color:#e65100;">Process PO</strong><span>Pack goods & issue invoice</span></div>
+      <div class="arrow-down">↓</div>
+      <div class="step-box"><strong style="color:#e65100;">Ship goods</strong><span>Delivery to library</span></div>
+    </div>
+    <div class="col-body" style="background:#f1f9f1;">
+      <div class="step-box"><strong style="color:#2e7d32;">Inspect goods (GRN)</strong><span>Item, qty, expiry date checked</span></div>
+      <div class="arrow-down">↓</div>
+      <div class="step-box"><strong style="color:#2e7d32;">Assign to shelf</strong><span>Floor → Section → Rack → Shelf</span></div>
+      <div class="arrow-down">↓</div>
+      <div class="step-box"><strong style="color:#2e7d32;">Barcode generated</strong><span>Library code + shelf position</span></div>
+      <div class="arrow-down">↓</div>
+      <div class="step-box"><strong style="color:#2e7d32;">Stock update ▲</strong><span>Available to members</span></div>
+      <div class="arrow-down">↓</div>
+      <div class="step-box" style="background:#fdecea;border-color:#e53935;"><strong style="color:#b71c1c;">Stock update ▼</strong><span>Decremented on borrow</span></div>
+    </div>
+    <div class="col-body" style="background:#fef6f8;">
+      <div class="step-box"><strong style="color:#880e4f;">Verify documents</strong><span>GRN matched with invoice</span></div>
+      <div class="arrow-down">↓</div>
+      <div class="step-box"><strong style="color:#880e4f;">Accounts payable</strong><span>Supplier ledger updated</span></div>
+      <div class="arrow-down">↓</div>
+      <div class="step-box"><strong style="color:#880e4f;">Payment to supplier</strong><span>Payment voucher created</span></div>
+      <div class="arrow-down">↓</div>
+      <div class="step-box"><strong style="color:#880e4f;">Record daily revenue</strong><span>Fine + membership income</span></div>
+    </div>
+  </div>
+  <div class="feature-bar" style="grid-template-columns:repeat(3,1fr);">
+    <div class="feature-bar-item"><span class="badge-alert">ALERT</span> Dynamic low-stock alert + auto requisition</div>
+    <div class="feature-bar-item"><i class="ti ti-calendar-time" style="color:#4dd0e1;font-size:16px;"></i> FEFO — expiry tracking & notification</div>
+    <div class="feature-bar-item"><i class="ti ti-shield-check" style="color:#a5d6a7;font-size:16px;"></i> System audit trail — every change logged</div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════ -->
+<!-- ILLUSTRATION ROW 2 — Borrowing flow               -->
+<!-- ══════════════════════════════════════════════════ -->
+<div class="erp-wrap">
+  <div class="erp-head">LIGHTHOUSE LIBRARY — BORROWING WORKFLOW</div>
+  <div class="erp-sub">Member request → Admin approval → Borrow → Return → Fine (if overdue)</div>
+
+  <!-- Illustration strip -->
+  <div class="illus-row" style="grid-template-columns:1fr 30px 1fr 30px 1fr 30px 1fr 30px 1fr;padding:12px 8px;border-bottom:1px solid #eee;">
+
+    <div class="illus-cell" style="padding:10px 6px;">
+      <svg width="52" height="52" viewBox="0 0 52 52" fill="none">
+        <rect x="4" y="8" width="44" height="36" rx="4" fill="#e8f5f5" stroke="#006D6F" stroke-width="1.5"/>
+        <rect x="10" y="14" width="14" height="18" rx="2" fill="#006D6F" opacity=".6"/>
+        <rect x="28" y="14" width="14" height="18" rx="2" fill="#006D6F" opacity=".3"/>
+        <circle cx="38" cy="36" r="7" fill="#006D6F"/>
+        <path d="M35 36l2 2 4-4" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <div class="illus-label" style="color:#006D6F;font-size:10px;">Browse catalogue</div>
+    </div>
+
+    <div class="arrow-connector" style="font-size:16px;">→</div>
+
+    <div class="illus-cell" style="padding:10px 6px;">
+      <svg width="52" height="52" viewBox="0 0 52 52" fill="none">
+        <rect x="6" y="10" width="28" height="36" rx="3" fill="#e8f5f5" stroke="#006D6F" stroke-width="1.5"/>
+        <rect x="10" y="16" width="20" height="2.5" rx="1.2" fill="#006D6F" opacity=".4"/>
+        <rect x="10" y="21" width="16" height="2.5" rx="1.2" fill="#006D6F" opacity=".3"/>
+        <rect x="10" y="26" width="18" height="2.5" rx="1.2" fill="#006D6F" opacity=".3"/>
+        <circle cx="38" cy="36" r="10" fill="#006D6F"/>
+        <path d="M34 36h8M38 32v8" stroke="white" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+      <div class="illus-label" style="color:#006D6F;font-size:10px;">Borrow request</div>
+    </div>
+
+    <div class="arrow-connector" style="font-size:16px;">→</div>
+
+    <div class="illus-cell" style="padding:10px 6px;">
+      <svg width="52" height="52" viewBox="0 0 52 52" fill="none">
+        <circle cx="26" cy="26" r="20" fill="#e3f2fd" stroke="#1565C0" stroke-width="1.5"/>
+        <path d="M18 26l6 6 12-12" stroke="#1565C0" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+        <circle cx="26" cy="14" r="4" fill="#1565C0" opacity=".6"/>
+      </svg>
+      <div class="illus-label" style="color:#1565C0;font-size:10px;">Admin approves</div>
+    </div>
+
+    <div class="arrow-connector" style="font-size:16px;">→</div>
+
+    <div class="illus-cell" style="padding:10px 6px;">
+      <svg width="52" height="52" viewBox="0 0 52 52" fill="none">
+        <rect x="8" y="12" width="22" height="30" rx="3" fill="#e8f5e9" stroke="#2e7d32" stroke-width="1.5"/>
+        <rect x="12" y="18" width="14" height="2" rx="1" fill="#2e7d32" opacity=".5"/>
+        <rect x="12" y="23" width="10" height="2" rx="1" fill="#2e7d32" opacity=".4"/>
+        <rect x="12" y="28" width="12" height="2" rx="1" fill="#2e7d32" opacity=".4"/>
+        <circle cx="36" cy="20" r="3" fill="#2e7d32" opacity=".6"/>
+        <path d="M30 38c0-5.5 2.7-10 6-10" stroke="#2e7d32" stroke-width="1.5" stroke-linecap="round"/>
+        <circle cx="38" cy="38" r="6" fill="#2e7d32" opacity=".8"/>
+        <path d="M35 38l2 2 4-4" stroke="white" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <div class="illus-label" style="color:#2e7d32;font-size:10px;">Member collects</div>
+    </div>
+
+    <div class="arrow-connector" style="font-size:16px;">→</div>
+
+    <div class="illus-cell" style="padding:10px 6px;">
+      <svg width="52" height="52" viewBox="0 0 52 52" fill="none">
+        <rect x="6" y="12" width="22" height="30" rx="3" fill="#f1f9f1" stroke="#2e7d32" stroke-width="1.5"/>
+        <path d="M10 28l5 5 8-10" stroke="#2e7d32" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M36 10v20M28 18l8-8 8 8" stroke="#1565C0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+      </svg>
+      <div class="illus-label" style="color:#1565C0;font-size:10px;">Admin marks returned</div>
+    </div>
+  </div>
+
+  <!-- Steps row -->
+  <div style="padding:14px;display:grid;grid-template-columns:1fr 30px 1fr 30px 1fr 30px 1fr 30px 1fr;gap:0;align-items:start;">
+    <div class="flow-step">
+      <div class="step-num" style="background:#006D6F;">1</div>
+      <div class="step-box" style="min-height:66px;"><strong>Member browses</strong><span>Search catalogue by DDC / category</span></div>
+    </div>
+    <div class="flow-connector">→</div>
+    <div class="flow-step">
+      <div class="step-num" style="background:#006D6F;">2</div>
+      <div class="step-box" style="min-height:66px;border-color:#006D6F;"><strong>Borrow request</strong><span>Physical copy or PDF 10-page preview</span></div>
+    </div>
+    <div class="flow-connector">→</div>
+    <div class="flow-step">
+      <div class="step-num" style="background:#1565C0;">3</div>
+      <div class="step-box" style="min-height:66px;border-color:#1565C0;background:#f3f8ff;"><strong style="color:#1565C0;">Admin reviews</strong><span>Approve or reject. Due date set</span></div>
+    </div>
+    <div class="flow-connector">→</div>
+    <div class="flow-step">
+      <div class="step-num" style="background:#2e7d32;">4</div>
+      <div class="step-box" style="min-height:66px;border-color:#2e7d32;background:#f1f9f1;"><strong style="color:#2e7d32;">Member collects</strong><span>Physical book or reads PDF online</span></div>
+    </div>
+    <div class="flow-connector">→</div>
+    <div class="flow-step">
+      <div class="step-num" style="background:#1565C0;">5</div>
+      <div class="step-box" style="min-height:66px;border-color:#1565C0;background:#f3f8ff;"><strong style="color:#1565C0;">Admin marks returned</strong><span>Stock updated ▲</span></div>
+    </div>
+  </div>
+  <div class="overdue-banner">
+    <span class="badge-alert">IF OVERDUE</span>
+    <span style="font-size:12px;color:#b71c1c;">Fine auto-calculated per day → Member notified → Fine paid online or at counter → Recorded in Accounts module</span>
+  </div>
+  <div style="height:12px;"></div>
+</div>
+
+<!-- ══════════════════════════════════════════════════ -->
+<!-- ILLUSTRATION ROW 3 — PO flow                      -->
+<!-- ══════════════════════════════════════════════════ -->
+<div class="erp-wrap">
+  <div class="erp-head">LIGHTHOUSE LIBRARY — PURCHASE ORDER & STOCK-IN WORKFLOW</div>
+  <div class="erp-sub">Admin creates PO → Supplier ships → GRN → Assign shelf → Stock update</div>
+
+  <!-- Illustration strip -->
+  <div class="illus-row" style="grid-template-columns:repeat(7,1fr);padding:12px 8px;border-bottom:1px solid #eee;">
+
+    <div class="illus-cell" style="padding:8px 4px;">
+      <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+        <rect x="6" y="6" width="28" height="36" rx="3" fill="#e3f2fd" stroke="#1565C0" stroke-width="1.5"/>
+        <rect x="10" y="12" width="16" height="2" rx="1" fill="#1565C0" opacity=".5"/>
+        <rect x="10" y="17" width="12" height="2" rx="1" fill="#1565C0" opacity=".35"/>
+        <rect x="10" y="22" width="14" height="2" rx="1" fill="#1565C0" opacity=".35"/>
+        <path d="M28 28l8-8M36 28v-8h-8" stroke="#1565C0" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        <circle cx="36" cy="36" r="6" fill="#1565C0" opacity=".9"/>
+        <path d="M33 36l2 2 4-4" stroke="white" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <div class="illus-label" style="color:#1565C0;font-size:10px;">Create PO</div>
+    </div>
+
+    <div class="arrow-connector" style="font-size:14px;">→</div>
+
+    <div class="illus-cell" style="padding:8px 4px;">
+      <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+        <rect x="4" y="18" width="32" height="20" rx="3" fill="#fff3e0" stroke="#e65100" stroke-width="1.5"/>
+        <path d="M4 24h32" stroke="#e65100" stroke-width="1" opacity=".4"/>
+        <rect x="8" y="28" width="8" height="6" rx="1" fill="#e65100" opacity=".3"/>
+        <rect x="20" y="28" width="8" height="6" rx="1" fill="#e65100" opacity=".3"/>
+        <circle cx="10" cy="40" r="3" fill="#e65100" opacity=".7"/>
+        <circle cx="30" cy="40" r="3" fill="#e65100" opacity=".7"/>
+        <path d="M36 28l6-10" stroke="#e65100" stroke-width="1.5" stroke-linecap="round"/>
+        <circle cx="42" cy="16" r="4" fill="#e65100" opacity=".5"/>
+      </svg>
+      <div class="illus-label" style="color:#e65100;font-size:10px;">Supplier ships</div>
+    </div>
+
+    <div class="arrow-connector" style="font-size:14px;">→</div>
+
+    <div class="illus-cell" style="padding:8px 4px;">
+      <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+        <rect x="6" y="10" width="36" height="28" rx="3" fill="#e8f5e9" stroke="#2e7d32" stroke-width="1.5"/>
+        <path d="M14 24l6 6 14-14" stroke="#2e7d32" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+        <rect x="10" y="14" width="28" height="2" rx="1" fill="#2e7d32" opacity=".2"/>
+      </svg>
+      <div class="illus-label" style="color:#2e7d32;font-size:10px;">GRN — inspect goods</div>
+    </div>
+
+    <div class="arrow-connector" style="font-size:14px;">→</div>
+
+    <div class="illus-cell" style="padding:8px 4px;">
+      <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+        <rect x="4" y="8" width="40" height="8" rx="2" fill="#2e7d32" opacity=".2" stroke="#2e7d32" stroke-width="1"/>
+        <rect x="4" y="20" width="40" height="8" rx="2" fill="#2e7d32" opacity=".15" stroke="#2e7d32" stroke-width="1"/>
+        <rect x="4" y="32" width="40" height="8" rx="2" fill="#2e7d32" opacity=".1" stroke="#2e7d32" stroke-width="1"/>
+        <rect x="8" y="10" width="8" height="4" rx="1" fill="#2e7d32" opacity=".5"/>
+        <rect x="8" y="22" width="8" height="4" rx="1" fill="#2e7d32" opacity=".4"/>
+        <rect x="8" y="34" width="8" height="4" rx="1" fill="#2e7d32" opacity=".3"/>
+      </svg>
+      <div class="illus-label" style="color:#2e7d32;font-size:10px;">Assign to shelf</div>
+    </div>
+
+    <div class="arrow-connector" style="font-size:14px;">→</div>
+
+    <div class="illus-cell" style="padding:8px 4px;">
+      <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+        <rect x="6" y="10" width="36" height="16" rx="3" fill="#f1f9f1" stroke="#2e7d32" stroke-width="1.5"/>
+        <rect x="10" y="14" width="28" height="3" rx="1" fill="#2e7d32" opacity=".15"/>
+        <rect x="10" y="19" width="28" height="3" rx="1" fill="#2e7d32" opacity=".15"/>
+        <path d="M10 30h6M18 30h6M26 30h6M34 30h4" stroke="#2e7d32" stroke-width="2.5" stroke-linecap="round"/>
+        <path d="M10 34h4M16 34h6M24 34h4" stroke="#2e7d32" stroke-width="1.5" stroke-linecap="round" opacity=".5"/>
+        <circle cx="38" cy="38" r="7" fill="#2e7d32" opacity=".9"/>
+        <path d="M35.5 38l2 2 4-4" stroke="white" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <div class="illus-label" style="color:#2e7d32;font-size:10px;">Barcode + stock ▲</div>
+    </div>
+  </div>
+
+  <!-- Step boxes -->
+  <div style="padding:14px;display:grid;grid-template-columns:1fr 28px 1fr 28px 1fr 28px 1fr;gap:0;align-items:start;">
+    <div class="flow-step">
+      <div class="step-num" style="background:#1565C0;">1</div>
+      <div class="step-box" style="border-color:#1565C0;background:#f3f8ff;min-height:70px;"><strong style="color:#1565C0;">Create Purchase Order</strong><span>Select supplier, items, quantities. Approved by senior admin</span></div>
+      <div class="flow-label">Admin</div>
+    </div>
+    <div class="flow-connector">→</div>
+    <div class="flow-step">
+      <div class="step-num" style="background:#e65100;">2</div>
+      <div class="step-box" style="border-color:#e65100;background:#fffbf5;min-height:70px;"><strong style="color:#e65100;">Supplier ships goods</strong><span>Packs books, issues invoice, delivers to library</span></div>
+      <div class="flow-label">Supplier</div>
+    </div>
+    <div class="flow-connector">→</div>
+    <div class="flow-step">
+      <div class="step-num" style="background:#2e7d32;">3</div>
+      <div class="step-box" style="border-color:#2e7d32;background:#f1f9f1;min-height:70px;"><strong style="color:#2e7d32;">GRN — inspect goods</strong><span>Item, qty, expiry date entered per batch</span></div>
+      <div class="flow-label">Admin</div>
+    </div>
+    <div class="flow-connector">→</div>
+    <div class="flow-step">
+      <div class="step-num" style="background:#2e7d32;">4</div>
+      <div class="step-box" style="border-color:#2e7d32;background:#f1f9f1;min-height:70px;"><strong style="color:#2e7d32;">Assign shelf + barcode</strong><span>Floor→Section→Rack→Shelf. Capacity auto-checked. Library code generated</span></div>
+      <div class="flow-label">System</div>
+    </div>
+  </div>
+  <div style="padding:0 14px 14px;display:grid;grid-template-columns:1fr 28px 1fr 28px 1fr;gap:0;align-items:start;">
+    <div class="flow-step">
+      <div class="step-num" style="background:#880e4f;">5</div>
+      <div class="step-box" style="border-color:#880e4f;background:#fef6f8;"><strong style="color:#880e4f;">Accounts payable</strong><span>Supplier ledger updated. Payment voucher created</span></div>
+      <div class="flow-label">Finance</div>
+    </div>
+    <div class="flow-connector">→</div>
+    <div class="flow-step">
+      <div class="step-num" style="background:#006D6F;">6</div>
+      <div class="step-box" style="border-color:#006D6F;background:#e8f5f5;"><strong style="color:#006D6F;">Stock updated ▲</strong><span>Available copies visible to members immediately</span></div>
+      <div class="flow-label">System</div>
+    </div>
+    <div></div><div></div><div></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════ -->
+<!-- FEFO + RBAC side by side                           -->
+<!-- ══════════════════════════════════════════════════ -->
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px;">
+
+  <!-- FEFO -->
+  <div class="erp-wrap" style="margin-bottom:0;">
+    <div class="erp-head" style="font-size:12px;">FEFO EXPIRY TRACKING WORKFLOW</div>
+    <div style="padding:12px;display:grid;grid-template-columns:1fr 20px 1fr 20px 1fr 20px 1fr;gap:0;align-items:center;">
+
+      <div style="text-align:center;">
+        <svg width="40" height="40" viewBox="0 0 40 40" fill="none" style="display:block;margin:0 auto 5px;">
+          <circle cx="20" cy="20" r="18" fill="#e8f5e9" stroke="#2e7d32" stroke-width="1.5"/>
+          <rect x="10" y="14" width="20" height="14" rx="2" fill="#2e7d32" opacity=".2" stroke="#2e7d32" stroke-width="1"/>
+          <rect x="13" y="10" width="4" height="6" rx="1" fill="#2e7d32" opacity=".6"/>
+          <rect x="23" y="10" width="4" height="6" rx="1" fill="#2e7d32" opacity=".6"/>
+          <rect x="13" y="19" width="5" height="4" rx="1" fill="#2e7d32" opacity=".4"/>
+          <rect x="22" y="19" width="5" height="4" rx="1" fill="#2e7d32" opacity=".4"/>
+        </svg>
+        <div style="font-size:9.5px;font-weight:bold;color:#2e7d32;">Receive (GRN)</div>
+        <div style="font-size:9px;color:#666;">Batch + expiry date entered</div>
+      </div>
+      <div style="text-align:center;color:#aaa;font-size:14px;">→</div>
+
+      <div style="text-align:center;">
+        <svg width="40" height="40" viewBox="0 0 40 40" fill="none" style="display:block;margin:0 auto 5px;">
+          <circle cx="20" cy="20" r="18" fill="#e3f2fd" stroke="#1565C0" stroke-width="1.5"/>
+          <circle cx="20" cy="20" r="10" stroke="#1565C0" stroke-width="1.5" fill="none"/>
+          <path d="M20 14v6l4 4" stroke="#1565C0" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+        <div style="font-size:9.5px;font-weight:bold;color:#1565C0;">System monitors</div>
+        <div style="font-size:9px;color:#666;">Daily check — days remaining</div>
+      </div>
+      <div style="text-align:center;color:#aaa;font-size:14px;">→</div>
+
+      <div style="text-align:center;">
+        <svg width="40" height="40" viewBox="0 0 40 40" fill="none" style="display:block;margin:0 auto 5px;">
+          <circle cx="20" cy="20" r="18" fill="#fff3e0" stroke="#e65100" stroke-width="1.5"/>
+          <path d="M20 12v10" stroke="#e65100" stroke-width="2" stroke-linecap="round"/>
+          <circle cx="20" cy="26" r="2" fill="#e65100"/>
+        </svg>
+        <div style="font-size:9.5px;font-weight:bold;color:#e65100;">Alert sent</div>
+        <div style="font-size:9px;color:#666;">15 days & 7 days before</div>
+      </div>
+      <div style="text-align:center;color:#aaa;font-size:14px;">→</div>
+
+      <div style="text-align:center;">
+        <svg width="40" height="40" viewBox="0 0 40 40" fill="none" style="display:block;margin:0 auto 5px;">
+          <circle cx="20" cy="20" r="18" fill="#fce4ec" stroke="#880e4f" stroke-width="1.5"/>
+          <path d="M12 20h16M20 12v16" stroke="#880e4f" stroke-width="2" stroke-linecap="round"/>
+          <path d="M15 15l10 10M25 15L15 25" stroke="#880e4f" stroke-width="1" stroke-linecap="round" opacity=".4"/>
+        </svg>
+        <div style="font-size:9.5px;font-weight:bold;color:#880e4f;">Final action</div>
+        <div style="font-size:9px;color:#666;">Discount / return / remove</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RBAC -->
+  <div class="erp-wrap" style="margin-bottom:0;">
+    <div class="erp-head" style="font-size:12px;">ROLE-BASED AUTHORIZATION (RBAC)</div>
+    <div style="padding:12px;display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+      <div style="border:1.5px solid #006D6F;border-radius:6px;overflow:hidden;">
+        <div style="background:#006D6F;color:white;padding:6px 10px;font-size:11px;font-weight:bold;display:flex;align-items:center;gap:6px;">
+          <i class="ti ti-shield-lock" style="font-size:13px;"></i> Admin
+        </div>
+        <div style="padding:8px 10px;font-size:10.5px;line-height:1.7;">
+          ✓ Manage books &amp; DDC<br>
+          ✓ Approve borrow requests<br>
+          ✓ Create &amp; approve PO<br>
+          ✓ Receive GRN, assign shelf<br>
+          ✓ Configure fine rules<br>
+          ✓ Manage members<br>
+          ✓ Create custom roles<br>
+          ✓ System-wide reports
+        </div>
+      </div>
+      <div style="border:1.5px solid #1565C0;border-radius:6px;overflow:hidden;">
+        <div style="background:#1565C0;color:white;padding:6px 10px;font-size:11px;font-weight:bold;display:flex;align-items:center;gap:6px;">
+          <i class="ti ti-user-circle" style="font-size:13px;"></i> Member
+        </div>
+        <div style="padding:8px 10px;font-size:10.5px;line-height:1.7;">
+          ✓ Browse catalogue (DDC)<br>
+          ✓ Borrow physical / PDF<br>
+          ✓ 10-page PDF preview<br>
+          ✓ Reserve unavailable books<br>
+          ✓ View personal dashboard<br>
+          ✓ Pay fines &amp; fees online<br>
+          ✓ Renew / upgrade plan<br>
+          ✓ Generate activity report
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════ -->
+<!-- MODULES + TECH STACK                               -->
+<!-- ══════════════════════════════════════════════════ -->
+<div class="erp-wrap">
+  <div class="erp-head">LIGHTHOUSE LIBRARY — CORE MODULES & TECHNOLOGY STACK</div>
+  <div style="padding:14px;">
+
+    <!-- Modules with SVG icons -->
+    <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:14px;">
+
+      <div class="mod-box" style="border-color:#006D6F;">
+        <svg width="36" height="36" viewBox="0 0 36 36" fill="none" style="display:block;margin:0 auto;">
+          <rect x="4" y="4" width="12" height="28" rx="2" fill="#006D6F" opacity=".3" stroke="#006D6F" stroke-width="1.5"/>
+          <rect x="20" y="4" width="12" height="28" rx="2" fill="#006D6F" opacity=".15" stroke="#006D6F" stroke-width="1.5"/>
+          <rect x="8" y="10" width="4" height="2" rx="1" fill="#006D6F" opacity=".7"/>
+          <rect x="8" y="14" width="4" height="2" rx="1" fill="#006D6F" opacity=".5"/>
+          <rect x="24" y="10" width="4" height="2" rx="1" fill="#006D6F" opacity=".5"/>
+        </svg>
+        <div class="mod-title">Books & Stock</div>
+        <div class="mod-sub">DDC, editions, barcodes, shelves</div>
+      </div>
+
+      <div class="mod-box" style="border-color:#1565C0;">
+        <svg width="36" height="36" viewBox="0 0 36 36" fill="none" style="display:block;margin:0 auto;">
+          <rect x="4" y="6" width="22" height="28" rx="2" fill="#1565C0" opacity=".15" stroke="#1565C0" stroke-width="1.5"/>
+          <rect x="7" y="11" width="12" height="2" rx="1" fill="#1565C0" opacity=".5"/>
+          <rect x="7" y="15" width="9" height="2" rx="1" fill="#1565C0" opacity=".4"/>
+          <rect x="7" y="19" width="10" height="2" rx="1" fill="#1565C0" opacity=".4"/>
+          <circle cx="27" cy="27" r="7" fill="#1565C0" opacity=".9"/>
+          <path d="M24 27l2 2 4-4" stroke="white" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <div class="mod-title">Purchase & Supplier</div>
+        <div class="mod-sub">Requisition, PO, GRN</div>
+      </div>
+
+      <div class="mod-box" style="border-color:#2e7d32;">
+        <svg width="36" height="36" viewBox="0 0 36 36" fill="none" style="display:block;margin:0 auto;">
+          <rect x="8" y="4" width="16" height="22" rx="2" fill="#2e7d32" opacity=".2" stroke="#2e7d32" stroke-width="1.5"/>
+          <path d="M24 12l6-6M30 6h-4M30 6v4" stroke="#2e7d32" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M8 30l4-6h12l4 6" stroke="#2e7d32" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+          <circle cx="16" cy="30" r="2.5" fill="#2e7d32" opacity=".7"/>
+          <circle cx="24" cy="30" r="2.5" fill="#2e7d32" opacity=".7"/>
+        </svg>
+        <div class="mod-title">Borrowing & Reservation</div>
+        <div class="mod-sub">Requests, due dates, returns</div>
+      </div>
+
+      <div class="mod-box" style="border-color:#880e4f;">
+        <svg width="36" height="36" viewBox="0 0 36 36" fill="none" style="display:block;margin:0 auto;">
+          <circle cx="18" cy="18" r="13" fill="#880e4f" opacity=".1" stroke="#880e4f" stroke-width="1.5"/>
+          <path d="M18 10v2M18 24v2M10 18h2M24 18h2" stroke="#880e4f" stroke-width="1.5" stroke-linecap="round"/>
+          <circle cx="18" cy="18" r="5" fill="#880e4f" opacity=".3" stroke="#880e4f" stroke-width="1"/>
+          <path d="M16 16l4 4M20 16l-4 4" stroke="#880e4f" stroke-width="1" stroke-linecap="round" opacity=".6"/>
+        </svg>
+        <div class="mod-title">Accounts & Finance</div>
+        <div class="mod-sub">Payable, fines, revenue</div>
+      </div>
+
+      <div class="mod-box" style="border-color:#e65100;">
+        <svg width="36" height="36" viewBox="0 0 36 36" fill="none" style="display:block;margin:0 auto;">
+          <path d="M18 4l12 6v10c0 7-12 12-12 12S6 27 6 20V10z" fill="#e65100" opacity=".15" stroke="#e65100" stroke-width="1.5"/>
+          <path d="M12 18l4 4 8-8" stroke="#e65100" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <div class="mod-title">HR & Admin (RBAC)</div>
+        <div class="mod-sub">Custom roles, permissions, audit</div>
+      </div>
+    </div>
+
+    <!-- Tech stack — UPDATED with Angular -->
+    <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px;">
+
+      <div class="tech-item">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#61dafb" stroke-width="1.5" style="display:block;margin:0 auto 4px;">
+          <circle cx="12" cy="12" r="2.5" fill="#61dafb" stroke="none"/>
+          <ellipse cx="12" cy="12" rx="10" ry="4" stroke="#61dafb" stroke-width="1.3" fill="none"/>
+          <ellipse cx="12" cy="12" rx="10" ry="4" stroke="#61dafb" stroke-width="1.3" fill="none" transform="rotate(60 12 12)"/>
+          <ellipse cx="12" cy="12" rx="10" ry="4" stroke="#61dafb" stroke-width="1.3" fill="none" transform="rotate(120 12 12)"/>
+        </svg>
+        <strong>React + TypeScript</strong>
+        <span>Member / user side frontend</span>
+      </div>
+
+      <div class="tech-item">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" style="display:block;margin:0 auto 4px;">
+          <path d="M12 2l9.5 16.5H2.5z" fill="#dd0031" opacity=".85"/>
+          <path d="M12 2L6 13h12z" fill="#c3002f" opacity=".5"/>
+          <rect x="8.5" y="14" width="7" height="2" rx="1" fill="white" opacity=".8"/>
+        </svg>
+        <strong>Angular</strong>
+        <span>Admin panel / back-office</span>
+      </div>
+
+      <div class="tech-item">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#68a063" stroke-width="1.5" style="display:block;margin:0 auto 4px;">
+          <rect x="2" y="3" width="20" height="18" rx="3" stroke="#4caf50" fill="none"/>
+          <path d="M7 8h10M7 12h6M7 16h8" stroke="#4caf50" stroke-width="1.3" stroke-linecap="round"/>
+        </svg>
+        <strong>.NET Core 8 Web API</strong>
+        <span>REST API — policy-based auth</span>
+      </div>
+
+      <div class="tech-item">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" style="display:block;margin:0 auto 4px;">
+          <ellipse cx="12" cy="9" rx="9" ry="4" stroke="#aaa" stroke-width="1.3" fill="none"/>
+          <path d="M3 9v6c0 2.2 4 4 9 4s9-1.8 9-4V9" stroke="#aaa" stroke-width="1.3" fill="none"/>
+          <path d="M3 12c0 2.2 4 4 9 4s9-1.8 9-4" stroke="#aaa" stroke-width="1" stroke-dasharray="2 2" fill="none"/>
+        </svg>
+        <strong>SQL Server + EF Core</strong>
+        <span>Entity Framework Core ORM</span>
+      </div>
+
+      <div class="tech-item">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" style="display:block;margin:0 auto 4px;">
+          <path d="M12 2l8 5v10l-8 5-8-5V7z" fill="#006D6F" opacity=".3" stroke="#4dd0e1" stroke-width="1.3"/>
+          <path d="M8 10l3 3 5-5" stroke="#4dd0e1" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <strong>Dynamic RBAC</strong>
+        <span>Custom roles — no code change</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Footer -->
+<div style="text-align:center;padding:12px;color:#888;font-size:11px;border-top:1px solid #ddd;">
+  Lighthouse Library Management System &nbsp;|&nbsp; Team 404Squad &nbsp;|&nbsp; Course: Cross Platform Apps using ASP.NET, Angular &amp; React (Round 67)
+</div>
+
+</div><!-- /page -->
+
+<script>
+function savePDF() {
+  alert('Print dialog will open.\n\nTo save as PDF:\n① Select "Save as PDF" as printer\n② Set Layout: Landscape\n③ Set Margins: Minimum\n④ Click Save');
+  window.print();
+}
+</script>
+</body>
+</html>

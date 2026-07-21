@@ -1,0 +1,77 @@
+<div class="container">
+  <div class="header">
+    <h2>📋 Borrowing / Circulation</h2>
+    <div class="header-actions">
+      <button (click)="triggerUpdateOverdue()" class="btn-overdue" [disabled]="updatingOverdue">
+        {{ updatingOverdue ? '⏳ Updating...' : '🔄 Update Overdue' }}
+      </button>
+      <a routerLink="/admin/circulation/request" class="btn-add">+ New Request</a>
+    </div>
+  </div>
+
+  <div class="toolbar">
+    <input type="text" [(ngModel)]="searchTerm" (input)="refresh()"
+      placeholder="🔍 Search member, book, barcode..." class="search-input" />
+    <div class="status-tabs">
+      @for (s of statusOptions; track s) {
+        <button class="tab-btn" [class.active]="statusFilter === s"
+          (click)="statusFilter = s; refresh()">{{ s }}</button>
+      }
+    </div>
+  </div>
+
+  @if (error) { <div class="alert-error">{{ error }}</div> }
+  @if (loading) { <div class="alert-info">Loading...</div> }
+  @if (!loading && filtered.length === 0 && !error) {
+    <div class="alert-warning">No borrowing records found for the selected filter.</div>
+  }
+
+  @if (!loading && filtered.length > 0) {
+    <table>
+      <thead>
+        <tr>
+          <th class="sortable" (click)="sortBy('borrowingId')"># {{ icon('borrowingId') }}</th>
+          <th class="sortable" (click)="sortBy('memberName')">Member {{ icon('memberName') }}</th>
+          <th class="sortable" (click)="sortBy('bookTitle')">Book {{ icon('bookTitle') }}</th>
+          <th>Barcode</th>
+          <th class="sortable" (click)="sortBy('requestedDate')">Requested {{ icon('requestedDate') }}</th>
+          <th class="sortable" (click)="sortBy('dueDate')">Due Date {{ icon('dueDate') }}</th>
+          <th class="sortable" (click)="sortBy('status')">Status {{ icon('status') }}</th>
+          <th>Fine</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (item of paged; track item.borrowingId) {
+          <tr [ngClass]="{ 'row-overdue': item.status === 'Overdue', 'row-pending': item.status === 'Pending' }">
+            <td><strong>#{{ item.borrowingId }}</strong></td>
+            <td>{{ item.memberName || '—' }}</td>
+            <td>{{ item.bookTitle || '—' }}</td>
+            <td><code>{{ item.barcode || '—' }}</code></td>
+            <td>{{ item.requestedDate | date:'mediumDate' }}</td>
+            <td>{{ item.dueDate ? (item.dueDate | date:'mediumDate') : '—' }}</td>
+            <td><span [class]="getStatusBadgeClass(item.status)">{{ item.status }}</span></td>
+            <td>
+              @if (item.fineAmount && item.fineAmount > 0) {
+                <span [class]="item.finePaid ? 'badge-returned' : 'badge-overdue'">
+                  ৳{{ item.fineAmount | number:'1.2-2' }}
+                  {{ item.finePaid ? '✓' : '⚠' }}
+                </span>
+              } @else { <span class="text-muted">—</span> }
+            </td>
+            <td class="actions">
+              <button (click)="viewDetail(item.borrowingId)" class="btn-details">Details</button>
+              @if (item.status === 'Pending') {
+                <button (click)="approve(item)" class="btn-approve">✅ Approve</button>
+                <button (click)="reject(item)" class="btn-reject">❌ Reject</button>
+              }
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+    <app-pagination [currentPage]="currentPage" [totalItems]="filtered.length" [pageSize]="pageSize"
+      (pageChanged)="onPageChanged($event)" (pageSizeChanged)="onPageSizeChanged($event)">
+    </app-pagination>
+  }
+</div>

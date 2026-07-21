@@ -1,0 +1,59 @@
+﻿@page "/authors/add"
+@using Final_Project_Maui.Models
+@using Final_Project_Maui.Services
+@inject AuthorService AuthorService
+@inject NavigationManager Navigation
+
+<h3>Add Author</h3>
+
+<EditForm Model="@newAuthor" OnValidSubmit="HandleValidSubmit">
+    <DataAnnotationsValidator />
+    <ValidationSummary class="text-danger" />
+
+    <div class="mb-3">
+        <label class="form-label">Full Name *</label>
+        <InputText class="form-control" @bind-Value="newAuthor.FullName" />
+    </div>
+    <div class="mb-3">
+        <label class="form-label">Pseudonym</label>
+        <InputText class="form-control" @bind-Value="newAuthor.Pseudonym" />
+    </div>
+    <div class="mb-3">
+        <label class="form-label">Date of Birth</label>
+        <InputDate class="form-control" @bind-Value="newAuthor.DateOfBirth" />
+    </div>
+    <div class="mb-3">
+        <label class="form-label">Date of Death</label>
+        <InputDate class="form-control" @bind-Value="newAuthor.DateOfDeath" />
+    </div>
+    <div class="mb-3">
+        <label class="form-label">Nationality</label>
+        <InputText class="form-control" @bind-Value="newAuthor.Nationality" />
+    </div>
+    <div class="mb-3">
+        <label class="form-label">Biography</label>
+        <InputTextArea class="form-control" @bind-Value="newAuthor.Biography" />
+    </div>
+    <div class="mb-3">
+        <label class="form-label">Email</label>
+        <InputText class="form-control" @bind-Value="newAuthor.Email" />
+    </div>
+
+    <button type="submit" class="btn btn-success">Save</button>
+    <button type="button" class="btn btn-secondary" @onclick="Cancel">Cancel</button>
+</EditForm>
+
+@code {
+    private AuthorDto newAuthor = new();
+
+    private async Task HandleValidSubmit()
+    {
+        await AuthorService.CreateAuthorAsync(newAuthor);
+        Navigation.NavigateTo("/authors");
+    }
+
+    private void Cancel()
+    {
+        Navigation.NavigateTo("/authors");
+    }
+}

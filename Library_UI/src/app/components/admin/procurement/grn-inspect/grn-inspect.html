@@ -1,0 +1,265 @@
+<div class="inspect-page">
+
+  <!-- Top bar -->
+  <div class="inspect-topbar">
+    <div class="inspect-topbar-left">
+      <div class="inspect-topbar-icon"></div>
+      <div>
+        <div class="inspect-topbar-title">GRN Inspection</div>
+        <div class="inspect-topbar-sub">
+          @if (grn) {
+            PO: {{ grn.poNumber || '—' }}
+            &nbsp;·&nbsp; Supplier: {{ grn.supplierName || '—' }}
+            &nbsp;·&nbsp; Received {{ grn.receivedDate | date:'mediumDate' }}
+          } @else {
+            Loading draft...
+          }
+        </div>
+      </div>
+    </div>
+    <div class="inspect-topbar-actions">
+      <button (click)="back()" class="btn-back-inspect">← Back to Detail</button>
+    </div>
+  </div>
+
+  @if (error)   { <div class="insp-alert insp-alert-error">{{ error }}</div> }
+  @if (success) { <div class="insp-alert insp-alert-success"> {{ success }}</div> }
+  @if (loading) { <div class="insp-alert insp-alert-info"> Loading GRN data...</div> }
+
+  @if (!loading && grn) {
+
+    <!-- GRN Summary banner -->
+    <div class="grn-summary-banner">
+      <div class="gsb-item">
+        <span class="gsb-label">Purchase Order</span>
+        <span class="gsb-val">{{ grn.poNumber || '—' }}</span>
+      </div>
+      <div class="gsb-divider"></div>
+      <div class="gsb-item">
+        <span class="gsb-label">Supplier</span>
+        <span class="gsb-val">{{ grn.supplierName || '—' }}</span>
+      </div>
+      <div class="gsb-divider"></div>
+      <div class="gsb-item">
+        <span class="gsb-label">Received Date</span>
+        <span class="gsb-val">{{ grn.receivedDate | date:'mediumDate' }}</span>
+      </div>
+      <div class="gsb-divider"></div>
+      <div class="gsb-item">
+        <span class="gsb-label">Received By</span>
+        <span class="gsb-val">{{ grn.receivedBy || '—' }}</span>
+      </div>
+      <div class="gsb-divider"></div>
+      <div class="gsb-item">
+        <span class="gsb-label">Vehicle</span>
+        <span class="gsb-val">{{ grn.vehicleNumber || '—' }}</span>
+      </div>
+      <div class="gsb-divider"></div>
+      <div class="gsb-item">
+        <span class="gsb-label">Total Items</span>
+        <span class="gsb-val">{{ inspectionItems.length }} lines · {{ getTotalReceived() }} qty</span>
+      </div>
+      <div class="gsb-divider"></div>
+      <div class="gsb-item">
+        <span class="gsb-label">Status</span>
+        <span class="gsb-status-badge gsb-status-pending"> Pending Inspection</span>
+      </div>
+    </div>
+
+    <!-- Draft notice -->
+    @if (!isExistingGRN) {
+      <div class="draft-notice">
+        ℹ️ This GRN has <strong>not been saved yet</strong>. Review the items below and set conditions.
+        Clicking <strong>Approve &amp; Save GRN</strong> will save to the database and update stock.
+        Clicking <strong>Reject</strong> will discard this GRN entirely.
+      </div>
+    } @else {
+      <div class="draft-notice">
+        ℹ️ Review the received items below and set conditions. Clicking <strong>Approve &amp; Update Stock</strong> will approve this GRN and update stock.
+        Clicking <strong>Reject GRN</strong> will discard this GRN entirely.
+      </div>
+    }
+
+    <!-- Inspector details panel -->
+    <div class="insp-panel">
+      <div class="insp-panel-title">👤 Inspector Details</div>
+      <div class="insp-field-grid">
+
+        <div class="insp-field-row">
+          <label class="insp-field-label">Inspected By <span class="req">*</span></label>
+          <span class="insp-sep">:</span>
+          <div class="insp-field-val">
+            <input type="text" [(ngModel)]="inspection.inspectedBy"
+                   placeholder="Inspector name..." class="f-input" />
+          </div>
+        </div>
+
+        <div class="insp-field-row">
+          <label class="insp-field-label">Inspection Date <span class="req">*</span></label>
+          <span class="insp-sep">:</span>
+          <div class="insp-field-val">
+            <input type="date" [(ngModel)]="inspection.inspectionDate" class="f-input" />
+          </div>
+        </div>
+
+        <div class="insp-field-row">
+          <label class="insp-field-label">Overall Decision <span class="req">*</span></label>
+          <span class="insp-sep">:</span>
+          <div class="insp-field-val">
+            <div class="decision-btn-group">
+              <button type="button"
+                      class="decision-btn decision-approve"
+                      [class.active]="inspection.decision === 'Approved'"
+                      (click)="inspection.decision = 'Approved'">
+                 Approve &amp; Update Stock
+              </button>
+              <button type="button"
+                      class="decision-btn decision-reject"
+                      [class.active]="inspection.decision === 'Rejected'"
+                      (click)="inspection.decision = 'Rejected'">
+                ❌ Reject GRN
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="insp-field-row insp-field-row--full">
+          <label class="insp-field-label">Inspection Notes</label>
+          <span class="insp-sep">:</span>
+          <div class="insp-field-val">
+            <input type="text" [(ngModel)]="inspection.inspectionNotes"
+                   placeholder="Overall inspection remarks..." class="f-input" />
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Per-item inspection table -->
+    <div class="insp-panel" style="margin-top:14px">
+      <div class="insp-panel-header">
+        <div class="insp-panel-title">Item-by-Item Inspection</div>
+        <div class="insp-panel-hint">Review each received item — set condition, accepted quantity, and notes</div>
+      </div>
+
+      <div class="insp-table-wrap">
+        <table class="insp-table">
+          <thead>
+            <tr class="insp-head">
+              <th class="col-sl">#</th>
+              <th class="col-book">Book / Edition</th>
+              <th class="col-shelf">Shelf</th>
+              <th class="col-qty-recv">Received Qty</th>
+              <th class="col-condition">Condition</th>
+              <th class="col-qty-acc">Accepted Qty</th>
+              <th class="col-notes">Item Notes</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (item of inspectionItems; track item.purchaseOrderItemId; let i = $index) {
+              <tr class="insp-row" [class.insp-row-damaged]="item.condition === 'Damaged'"
+                                   [class.insp-row-rejected]="item.condition === 'Rejected'">
+                <td class="col-sl center">{{ i + 1 }}</td>
+                <td class="col-book">
+                  <div class="insp-book-title">{{ item.bookTitle }}</div>
+                  @if (item.edition && item.edition !== '—') {
+                    <div class="insp-book-edition">{{ item.edition }}</div>
+                  }
+                  @if (item.pO_Number) {
+                    <div class="insp-book-po">PO: {{ item.pO_Number }}</div>
+                  }
+                </td>
+                <td class="col-shelf">
+                  @if (item.shelfCode) {
+                    <span class="shelf-chip">📍 {{ item.shelfCode }}</span>
+                  } @else {
+                    <span style="color:#94a3b8;">—</span>
+                  }
+                </td>
+                <td class="col-qty-recv center">
+                  <span class="recv-qty-badge">{{ item.quantity }}</span>
+                </td>
+                <td class="col-condition">
+                  <div class="condition-select-group">
+                    <button type="button"
+                            class="cond-btn cond-good"
+                            [class.active]="item.condition === 'Good'"
+                            (click)="setCondition(item, 'Good')">Good</button>
+                    <button type="button"
+                            class="cond-btn cond-damaged"
+                            [class.active]="item.condition === 'Damaged'"
+                            (click)="setCondition(item, 'Damaged')">Damaged</button>
+                    <button type="button"
+                            class="cond-btn cond-rejected"
+                            [class.active]="item.condition === 'Rejected'"
+                            (click)="setCondition(item, 'Rejected')">Rejected</button>
+                  </div>
+                </td>
+                <td class="col-qty-acc">
+                  <input type="number"
+                         [(ngModel)]="item.acceptedQty"
+                         [max]="item.quantity"
+                         min="0"
+                         class="grid-input qty-input"
+                         [class.qty-warn]="item.acceptedQty < item.quantity" />
+                  @if (item.acceptedQty < item.quantity) {
+                    <div class="qty-diff-hint">
+                      {{ item.quantity - item.acceptedQty }} rejected
+                    </div>
+                  }
+                </td>
+                <td class="col-notes">
+                  <input type="text"
+                         [(ngModel)]="item.itemNotes"
+                         placeholder="e.g. spine damaged..."
+                         class="grid-input notes-input" />
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Inspection summary footer -->
+      <div class="insp-footer">
+        <div class="insp-footer-stats">
+          <div class="insp-stat">
+            <span class="insp-stat-label">Total Received</span>
+            <span class="insp-stat-val">{{ getTotalReceived() }}</span>
+          </div>
+          <div class="insp-stat">
+            <span class="insp-stat-label">Total Accepted</span>
+            <span class="insp-stat-val accepted">{{ getTotalAccepted() }}</span>
+          </div>
+          <div class="insp-stat">
+            <span class="insp-stat-label">Total Rejected</span>
+            <span class="insp-stat-val rejected">{{ getTotalReceived() - getTotalAccepted() }}</span>
+          </div>
+          <div class="insp-stat">
+            <span class="insp-stat-label">Acceptance Rate</span>
+            <span class="insp-stat-val" [class.rate-ok]="acceptanceRate >= 90"
+                                         [class.rate-warn]="acceptanceRate >= 70 && acceptanceRate < 90"
+                                         [class.rate-bad]="acceptanceRate < 70">
+              {{ acceptanceRate.toFixed(1) }}%
+            </span>
+          </div>
+        </div>
+        <div class="insp-footer-actions">
+          <button (click)="back()" class="btn-cancel-insp">Cancel</button>
+          <button (click)="submitInspection()"
+                  [disabled]="submitting || !inspection.decision"
+                  class="btn-submit-insp"
+                  [class.btn-submit-approve]="inspection.decision === 'Approved'"
+                  [class.btn-submit-reject]="inspection.decision === 'Rejected'">
+            {{ submitting ? 'Saving GRN...' :
+               inspection.decision === 'Approved' ? (isExistingGRN ? ' Approve &amp; Update Stock' : ' Approve &amp; Save GRN') :
+               inspection.decision === 'Rejected' ? '❌ Reject &amp; Discard GRN' :
+               '— Select Decision Above —' }}
+          </button>
+        </div>
+      </div>
+    </div>
+
+  }
+
+</div>

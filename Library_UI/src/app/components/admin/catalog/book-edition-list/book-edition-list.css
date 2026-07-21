@@ -1,0 +1,28 @@
+* { box-sizing: border-box; margin: 0; padding: 0; }
+.container { min-height: 100vh; background: #f0f2f5; padding: 40px 30px; font-family: 'Segoe UI', sans-serif; }
+.header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 28px; max-width: 1200px; margin-left: auto; margin-right: auto; }
+h2 { font-size: 26px; color: #1a1a2e; font-weight: 700; }
+.btn-add { background: linear-gradient(135deg, #4f6ef7, #7b5ea7); color: white; padding: 11px 22px; border-radius: 8px; text-decoration: none; font-size: 14px; font-weight: 600; }
+.alert-error { background: #fff0f0; color: #c0392b; padding: 13px 16px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #e74c3c; max-width: 1200px; margin-left: auto; margin-right: auto; }
+.alert-success { background: #f0fff4; color: #155724; padding: 13px 16px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #27ae60; max-width: 1200px; margin-left: auto; margin-right: auto; }
+.alert-info { background: #f0f4ff; color: #2471a3; padding: 13px 16px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #4f6ef7; max-width: 1200px; margin-left: auto; margin-right: auto; }
+.alert-warning { background: #fffbf0; color: #856404; padding: 13px 16px; border-radius: 8px; border-left: 4px solid #f0ad4e; max-width: 1200px; margin-left: auto; margin-right: auto; }
+table { width: 100%; max-width: 1200px; margin: 0 auto; border-collapse: collapse; background: white; border-radius: 14px; overflow: hidden; box-shadow: 0 4px 24px rgba(0,0,0,0.08); }
+thead { background: linear-gradient(135deg, #4f6ef7, #7b5ea7); color: white; }
+th { padding: 16px 18px; text-align: left; font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+td { padding: 14px 18px; border-bottom: 1px solid #f0f0f0; font-size: 14px; color: #333; }
+td small { color: #999; font-size: 12px; }
+tbody tr:hover { background: #f8f9ff; }
+tbody tr:last-child td { border-bottom: none; }
+.badge-rare { background: #fff3e0; color: #e67e22; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; border: 1px solid #e67e22; }
+.badge-normal { background: #f0f4ff; color: #4f6ef7; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; border: 1px solid #4f6ef7; }
+.actions { display: flex; gap: 8px; }
+button { padding: 7px 16px; border: none; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 600; }
+.btn-edit { background: #fff3e0; color: #e67e22; border: 1px solid #e67e22; }
+.btn-edit:hover { background: #e67e22; color: white; }
+.btn-delete { background: #fff0f0; color: #e74c3c; border: 1px solid #e74c3c; }
+.btn-delete:hover { background: #e74c3c; color: white; }
+.badge-yes { background: #f0fff4; color: #27ae60; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; border: 1px solid #27ae60; }
+.badge-no { background: #fff0f0; color: #e74c3c; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; border: 1px solid #e74c3c; }
+.badge-yes { background: #f0fff4; color: #27ae60; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; border: 1px solid #27ae60; }
+.badge-no { background: #fff0f0; color: #e74c3c; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; border: 1px solid #e74c3c; }

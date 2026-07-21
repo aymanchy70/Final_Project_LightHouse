@@ -1,0 +1,360 @@
+@import "tailwindcss";
+@import url("https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Lato:wght@300;400;700&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ─── CSS Variables ─────────────────────────────── */
+:root {
+  :root {
+    --peacock: #006d6f;
+    --peacock-hover: #005254;
+    --peacock-light: rgba(0, 109, 111, 0.1);
+    --gold-400: #006d6f; /* reuse the variable so existing classes work */
+    --gold-500: #005254;
+    /* ... keep other variables ... */
+  }
+  --cream-50: #fdfaf4;
+  --cream-100: #f9f3e3;
+  --cream-200: #f0e6c8;
+  --shadow-gold: 0 4px 24px rgba(212, 168, 83, 0.15);
+  --shadow-card: 0 8px 40px rgba(0, 0, 0, 0.25);
+}
+
+/* ─── Base ──────────────────────────────────────── */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+html {
+  scroll-behavior: smooth;
+}
+body {
+  font-family: "Lato", sans-serif;
+  background-color: var(--navy-900);
+  color: var(--cream-50);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* select,
+input,
+textarea {
+  color: #1f2937 !important;
+} */
+
+/* ─── Auth Card ─────────────────────────────────── */
+.auth-card {
+  background: linear-gradient(145deg, var(--navy-800) 0%, var(--navy-700) 100%);
+  border: 1px solid rgba(212, 168, 83, 0.2);
+  border-radius: 16px;
+  box-shadow: var(--shadow-card);
+  padding: 2.5rem;
+  width: 100%;
+  max-width: 440px;
+  animation: slideUp 0.5s ease forwards;
+}
+.auth-card__title {
+  font-family: "Playfair Display", serif;
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--cream-50);
+  margin-bottom: 0.25rem;
+}
+.auth-card__subtitle {
+  font-size: 0.9rem;
+  color: rgba(253, 250, 244, 0.55);
+  margin-bottom: 2rem;
+}
+
+/* ─── Form Fields ───────────────────────────────── */
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin-bottom: 1.2rem;
+}
+.form-label {
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--gold-400);
+}
+.form-input {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(212, 168, 83, 0.2);
+  border-radius: 8px;
+  color: var(--cream-50);
+  font-family: "Lato", sans-serif;
+  font-size: 0.95rem;
+  padding: 0.75rem 1rem;
+  transition:
+    border-color 0.2s,
+    box-shadow 0.2s,
+    background 0.2s;
+  outline: none;
+  width: 100%;
+}
+.form-input::placeholder {
+  color: rgba(253, 250, 244, 0.3);
+}
+.form-input:focus {
+  border-color: var(--gold-400);
+  background: rgba(212, 168, 83, 0.05);
+  box-shadow: 0 0 0 3px rgba(212, 168, 83, 0.12);
+}
+.form-input.error {
+  border-color: #ef4444;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.12);
+}
+.form-error {
+  font-size: 0.78rem;
+  color: #f87171;
+  margin-top: 0.2rem;
+}
+
+/* ─── Buttons ───────────────────────────────────── */
+.btn-primary {
+  background: linear-gradient(135deg, var(--gold-400) 0%, var(--gold-500) 100%);
+  border: none;
+  border-radius: 8px;
+  color: var(--navy-900);
+  cursor: pointer;
+  font-family: "Lato", sans-serif;
+  font-size: 0.9rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  padding: 0.85rem 1.5rem;
+  text-transform: uppercase;
+  transition:
+    opacity 0.2s,
+    transform 0.15s,
+    box-shadow 0.2s;
+  width: 100%;
+}
+.btn-primary:hover:not(:disabled) {
+  opacity: 0.92;
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-gold);
+}
+.btn-primary:active:not(:disabled) {
+  transform: translateY(0);
+}
+.btn-primary:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+/* ─── Auth Divider ──────────────────────────────── */
+.auth-divider {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin: 1.5rem 0;
+  color: rgba(253, 250, 244, 0.3);
+  font-size: 0.8rem;
+}
+.auth-divider::before,
+.auth-divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: rgba(212, 168, 83, 0.15);
+}
+
+/* ─── Auth Link ─────────────────────────────────── */
+.auth-link {
+  color: var(--gold-400);
+  font-weight: 700;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+.auth-link:hover {
+  color: var(--cream-50);
+}
+
+/* ─── Alert ─────────────────────────────────────── */
+.alert {
+  border-radius: 8px;
+  font-size: 0.875rem;
+  margin-bottom: 1.2rem;
+  padding: 0.75rem 1rem;
+}
+.alert-error {
+  background: rgba(239, 68, 68, 0.12);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: #fca5a5;
+}
+.alert-success {
+  background: rgba(34, 197, 94, 0.12);
+  border: 1px solid rgba(34, 197, 94, 0.3);
+  color: #86efac;
+}
+
+/* ─── Navbar ─────────────────────────────────────── */
+.navbar {
+  background: rgba(10, 14, 26, 0.85);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(212, 168, 83, 0.12);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+.navbar__brand {
+  font-family: "Playfair Display", serif;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--gold-400);
+  text-decoration: none;
+  letter-spacing: 0.02em;
+}
+
+/* ─── Hero ───────────────────────────────────────── */
+.hero {
+  position: relative;
+  overflow: hidden;
+  min-height: 88vh;
+  display: flex;
+  align-items: center;
+}
+.hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(
+      ellipse 60% 60% at 70% 40%,
+      rgba(212, 168, 83, 0.08) 0%,
+      transparent 70%
+    ),
+    radial-gradient(
+      ellipse 40% 50% at 20% 80%,
+      rgba(26, 34, 53, 0.9) 0%,
+      transparent 60%
+    );
+  pointer-events: none;
+}
+.hero__badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: rgba(212, 168, 83, 0.1);
+  border: 1px solid rgba(212, 168, 83, 0.3);
+  border-radius: 100px;
+  color: var(--gold-400);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  padding: 0.35rem 1rem;
+  text-transform: uppercase;
+  margin-bottom: 1.5rem;
+}
+.hero__title {
+  font-family: "Playfair Display", serif;
+  font-size: clamp(2.8rem, 6vw, 5rem);
+  font-weight: 700;
+  line-height: 1.1;
+  color: var(--cream-50);
+  margin-bottom: 1.5rem;
+}
+.hero__title span {
+  color: var(--gold-400);
+  font-style: italic;
+}
+.hero__description {
+  font-size: 1.1rem;
+  color: rgba(253, 250, 244, 0.65);
+  line-height: 1.7;
+  max-width: 520px;
+  margin-bottom: 2.5rem;
+}
+
+/* ─── Feature Cards ──────────────────────────────── */
+.feature-card {
+  background: linear-gradient(145deg, var(--navy-800), var(--navy-700));
+  border: 1px solid rgba(212, 168, 83, 0.12);
+  border-radius: 12px;
+  padding: 1.75rem;
+  transition:
+    border-color 0.25s,
+    transform 0.25s,
+    box-shadow 0.25s;
+}
+.feature-card:hover {
+  border-color: rgba(212, 168, 83, 0.35);
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-gold);
+}
+.feature-card__icon {
+  font-size: 2rem;
+  margin-bottom: 1rem;
+}
+.feature-card__title {
+  font-family: "Playfair Display", serif;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--cream-50);
+  margin-bottom: 0.5rem;
+}
+.feature-card__text {
+  font-size: 0.9rem;
+  color: rgba(253, 250, 244, 0.55);
+  line-height: 1.6;
+}
+
+/* ─── Spinner ────────────────────────────────────── */
+.spinner {
+  width: 18px;
+  height: 18px;
+  border: 2px solid rgba(10, 14, 26, 0.3);
+  border-top-color: var(--navy-900);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  display: inline-block;
+}
+
+/* ─── Page background ────────────────────────────── */
+.page-bg {
+  background-color: var(--navy-900);
+  background-image:
+    radial-gradient(
+      circle at 15% 50%,
+      rgba(212, 168, 83, 0.04) 0%,
+      transparent 50%
+    ),
+    radial-gradient(
+      circle at 85% 20%,
+      rgba(26, 34, 53, 0.8) 0%,
+      transparent 50%
+    );
+  min-height: 100vh;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

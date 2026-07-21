@@ -1,0 +1,139 @@
+/* ═══════════════════════════════════════════════════════════════
+   SHARED REPORT DOCUMENT STYLES  —  PO & GRN Reports
+   Handles both screen preview and print-only output.
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ── Report Page Card (screen preview) ───────────────────────── */
+.report-page {
+  background: white;
+  border-radius: 10px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.10);
+  overflow: hidden;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+/* ── Document Header ─────────────────────────────────────────── */
+.report-header {
+  background: linear-gradient(135deg, #1e40af 0%, #1e3a8a 100%);
+  color: white;
+  padding: 20px 28px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+.header-left  { display: flex; gap: 12px; align-items: flex-start; }
+.header-right { text-align: right; }
+
+.org-logo {
+  font-size: 26px;
+  width: 46px; height: 46px;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.org-info    { display: flex; flex-direction: column; }
+.org-name    { font-size: 15px; font-weight: 700; margin-bottom: 2px; }
+.org-dept    { font-size: 11px; color: rgba(255,255,255,0.82); }
+.org-tagline { font-size: 10px; color: rgba(255,255,255,0.60); margin-top: 2px; }
+
+.doc-type {
+  font-size: 9px; letter-spacing: 2px; text-transform: uppercase;
+  color: rgba(255,255,255,0.65); font-weight: 700; margin-bottom: 3px;
+}
+.doc-number {
+  font-size: 20px; font-weight: 700;
+  font-family: 'Courier New', monospace; margin-bottom: 3px;
+}
+.doc-date { font-size: 10px; color: rgba(255,255,255,0.78); }
+
+/* ── Dividers ────────────────────────────────────────────────── */
+.header-divider { height: 1px; background: #e5e7eb; }
+.page-divider   { border: none; border-top: 1px solid #e5e7eb; margin: 0; }
+
+/* ── Footer ──────────────────────────────────────────────────── */
+.report-footer {
+  background: #1e293b;
+  color: white;
+  padding: 12px 22px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 9.5px;
+  letter-spacing: 0.4px;
+}
+.footer-left, .footer-center, .footer-right { display: flex; flex-direction: column; gap: 2px; }
+.footer-center  { text-align: center; }
+.footer-right   { text-align: right; }
+.footer-text    { font-weight: 600; color: white; font-size: 10.5px; }
+.footer-subtext { font-size: 8.5px; color: rgba(255,255,255,0.55); }
+.footer-number  { font-family: 'Courier New', monospace; font-size: 10.5px; font-weight: 700; }
+
+/* ══════════════════════════════════════════════════════════════
+   PRINT STYLES
+   NOTE: window.print() is called from a cloned popup window
+   (see printReport() in each component .ts), so these rules
+   are a secondary safety net — the popup window approach is
+   the primary fix for "prints app chrome" bug.
+   ══════════════════════════════════════════════════════════════ */
+@media print {
+  /* ── Nuclear option: hide everything, then show only report-page ── */
+  body > * { display: none !important; }
+
+  app-root,
+  app-admin,
+  app-admin-layout,
+  .app-root,
+  .admin-layout,
+  .layout-root { display: block !important; }
+
+  .report-wrapper {
+    display: block !important;
+    background: white !important;
+    padding: 0 !important;
+    min-height: auto !important;
+  }
+  .report-page {
+    display: block !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    width: 100% !important;
+    overflow: visible !important;
+  }
+
+  /* Hide all sidebar / nav / toolbar chrome */
+  .sidebar, .nav-sidebar, app-sidebar, app-nav,
+  .sidenav, nav, header, .topbar, .navbar,
+  .main-nav, .admin-nav, app-toast, .toast,
+  .no-print { display: none !important; }
+
+  /* Remove main content left-margin that accounts for sidebar */
+  .main-content, .page-content, .admin-content, .content-area {
+    margin-left: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+  }
+
+  /* Preserve background colours (gradients on header/footer) */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* A4 page setup */
+  @page {
+    size: A4 portrait;
+    margin: 10mm 12mm;
+  }
+}
+
+/* ── Responsive ─────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .report-header { flex-direction: column; gap: 12px; }
+  .header-right  { text-align: left; }
+  .report-footer { flex-direction: column; gap: 8px; text-align: center; }
+  .footer-center, .footer-right { text-align: center; }
+}

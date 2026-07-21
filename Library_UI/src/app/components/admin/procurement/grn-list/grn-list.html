@@ -1,0 +1,60 @@
+<div class="list-container">
+  <h2>Goods Received Notes (GRN)</h2>
+
+  <div class="toolbar">
+    <button class="btn btn-primary" (click)="addNew()">+ Add New GRN</button>
+    <div class="search-box">
+      <input type="text" placeholder="Search GRN..." [(ngModel)]="searchTerm" (input)="refresh()" />
+    </div>
+  </div>
+
+  <div *ngIf="error" class="error-message">{{ error }}</div>
+
+  <table class="data-table" *ngIf="!loading && paged.length > 0">
+    <thead>
+      <tr>
+        <th (click)="sortBy('grnId')">ID <span [innerHTML]="icon('grnId')"></span></th>
+        <th (click)="sortBy('gRN_Number')">GRN Number <span [innerHTML]="icon('gRN_Number')"></span></th>
+        <th (click)="sortBy('receivedDate')">Received Date <span [innerHTML]="icon('receivedDate')"></span></th>
+        <th (click)="sortBy('receivedBy')">Received By <span [innerHTML]="icon('receivedBy')"></span></th>
+        <th (click)="sortBy('vehicleNumber')">Vehicle <span [innerHTML]="icon('vehicleNumber')"></span></th>
+        <th>Items</th>
+        <th (click)="sortBy('status')">Status <span [innerHTML]="icon('status')"></span></th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let item of paged">
+        <td>{{ item.grnId }}</td>
+        <td><strong>{{ item.gRN_Number }}</strong></td>
+        <td>{{ item.receivedDate | date:'mediumDate' }}</td>
+        <td>{{ item.receivedBy || '—' }}</td>
+        <td>{{ item.vehicleNumber || '—' }}</td>
+        <td>{{ item.items?.length || 0 }}</td>
+        <td>
+          <span class="grn-status-badge grn-status-{{ (item.status || 'pending') | lowercase }}">
+            {{ item.status || 'Pending' }}
+          </span>
+        </td>
+        <td class="actions">
+          <button class="btn btn-sm" (click)="view(item.grnId)">View</button>
+          @if ((item.status || 'Pending') === 'Pending') {
+            <button class="btn btn-sm btn-inspect" (click)="inspect(item.grnId)"> Inspect</button>
+          }
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div *ngIf="loading" class="loading">Loading...</div>
+  <div *ngIf="!loading && paged.length === 0 && !error" class="no-data">No GRNs found.</div>
+
+  <app-pagination
+    *ngIf="filtered.length > pageSize"
+    [totalItems]="filtered.length"
+    [pageSize]="pageSize"
+    [currentPage]="currentPage"
+    (pageChanged)="onPageChanged($event)"
+    (pageSizeChanged)="onPageSizeChanged($event)"
+  ></app-pagination>
+</div>

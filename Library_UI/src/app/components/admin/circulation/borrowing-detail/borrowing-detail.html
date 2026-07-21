@@ -1,0 +1,223 @@
+<div class="container">
+  <div class="page-header">
+    <button (click)="goBack()" class="btn-back">← Back to Circulation</button>
+    <h2>📋 Borrowing Detail</h2>
+  </div>
+
+  @if (error) { <div class="alert-error">{{ error }}</div> }
+  @if ((borrowing?.fineAmount ?? 0) > 0) {
+    <div class="fine-alert">
+      <strong>Fine Applied: ৳{{ borrowing?.fineAmount?.toFixed(2) }}</strong>
+      @if (!borrowing?.finePaid) { <span> — Not yet paid</span> }
+      @if (borrowing?.finePaid) { <span class="paid-badge">Paid</span> }
+    </div>
+  }
+  @if (loading) { <div class="alert-info">Loading...</div> }
+
+  @if (borrowing) {
+    <div class="detail-grid">
+
+      <!-- Info Card -->
+      <div class="card">
+        <div class="card-header">
+          <h3>📄 Record #{{ borrowing.borrowingId }}</h3>
+          <span [class]="getStatusBadgeClass(borrowing.status)">{{ borrowing.status }}</span>
+        </div>
+        <div class="card-body">
+          <div class="info-row">
+            <span class="label">Member</span>
+            <span class="value">{{ borrowing.memberName || '—' }} <small class="muted">(ID: {{ borrowing.memberId }})</small></span>
+          </div>
+          <div class="info-row">
+            <span class="label">Book Title</span>
+            <span class="value">{{ borrowing.bookTitle || '—' }}</span>
+          </div>
+          <div class="info-row">
+            <span class="label">Barcode</span>
+            <span class="value"><code>{{ borrowing.barcode || '—' }}</code></span>
+          </div>
+          <div class="info-row">
+            <span class="label">Physical Copy ID</span>
+            <span class="value">{{ borrowing.physicalCopyId }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Dates Card -->
+      <div class="card">
+        <div class="card-header"><h3>📅 Dates & Fines</h3></div>
+        <div class="card-body">
+          <div class="info-row">
+            <span class="label">Requested Date</span>
+            <span class="value">{{ borrowing.requestedDate | date:'medium' }}</span>
+          </div>
+          <div class="info-row">
+            <span class="label">Issue Date</span>
+            <span class="value">{{ borrowing.issueDate ? (borrowing.issueDate | date:'medium') : '—' }}</span>
+          </div>
+          <div class="info-row">
+            <span class="label">Due Date</span>
+            <span class="value" [class.overdue-text]="borrowing.status === 'Overdue'">
+              {{ borrowing.dueDate ? (borrowing.dueDate | date:'medium') : '—' }}
+              @if (borrowing.status === 'Overdue') { <span class="badge-overdue">OVERDUE</span> }
+            </span>
+          </div>
+          <div class="info-row">
+            <span class="label">Return Date</span>
+            <span class="value">{{ borrowing.returnDate ? (borrowing.returnDate | date:'medium') : '—' }}</span>
+          </div>
+          <div class="info-row">
+            <span class="label">Fine Amount</span>
+            <span class="value fine-amount" [class.has-fine]="(borrowing?.fineAmount ?? 0) > 0">
+              {{ (borrowing?.fineAmount ?? 0) > 0 ? '৳' + (borrowing?.fineAmount | number:'1.2-2') : 'No fine' }}
+            </span>
+          </div>
+          <div class="info-row">
+            <span class="label">Fine Paid</span>
+            <span class="value">
+              @if (borrowing?.finePaid) { <span class="badge-returned">✓ Paid</span> }
+              @else if ((borrowing?.fineAmount ?? 0) > 0) { <span class="badge-overdue">⚠ Unpaid</span> }
+              @else { <span class="muted">N/A</span> }
+            </span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="actions-bar">
+      <h3>Admin Actions</h3>
+      <div class="action-buttons">
+        @if (canApprove()) {
+          <button (click)="approve()" class="btn-approve" [disabled]="actionLoading">
+            ✅ Approve & Issue
+          </button>
+        }
+        @if (canReject()) {
+          <button (click)="reject()" class="btn-reject" [disabled]="actionLoading">
+            ❌ Reject Request
+          </button>
+        }
+        @if (canReturn()) {
+          <button (click)="openReturnModal()" class="btn-return" [disabled]="actionLoading">
+            📥 Process Return
+          </button>
+        }
+        @if (canMarkLost()) {
+          <button (click)="openLostModal()" class="btn-lost" [disabled]="actionLoading">
+            ⚠️ Mark Lost / Damaged
+          </button>
+        }
+        @if (borrowing.status === 'Pending' || borrowing.status === 'Borrowed') {
+          <button (click)="openPickupModal()" class="btn-pickup" [disabled]="actionLoading">
+            🔖 Pickup Reserved Copy
+          </button>
+        }
+        @if (!canApprove() && !canReject() && !canReturn() && !canMarkLost()) {
+          <p class="no-actions">No actions available for status: <strong>{{ borrowing?.status }}</strong></p>
+        }
+        @if ((borrowing?.fineAmount ?? 0) > 0 && !borrowing?.finePaid) {
+          <button class="btn-warning" [routerLink]="['/admin/payments/add']" [queryParams]="{ memberId: borrowing?.memberId }">
+            Record Fine Payment
+          </button>
+        }
+      </div>
+    </div>
+  }
+</div>
+
+<!-- ═══ Return Modal ═══ -->
+@if (showReturnModal) {
+  <div class="modal-overlay" (click)="closeReturnModal()">
+    <div class="modal" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>📥 Process Book Return</h3>
+        <button class="modal-close" (click)="closeReturnModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        <p class="modal-info">Book: <strong>{{ borrowing?.bookTitle }}</strong></p>
+        <p class="modal-info">Member: <strong>{{ borrowing?.memberName }}</strong></p>
+        @if (borrowing?.dueDate) {
+          <p class="modal-info">Due Date: <strong>{{ borrowing?.dueDate | date:'mediumDate' }}</strong></p>
+        }
+        <div class="form-group">
+          <label>Notes (optional)</label>
+          <textarea [(ngModel)]="returnNotes" rows="3" placeholder="Any condition notes..." class="form-control"></textarea>
+        </div>
+        <p class="modal-note">⚠ Fines will be auto-calculated if overdue.</p>
+      </div>
+      <div class="modal-footer">
+        <button (click)="closeReturnModal()" class="btn-cancel">Cancel</button>
+        <button (click)="confirmReturn()" class="btn-approve" [disabled]="actionLoading">
+          {{ actionLoading ? 'Processing...' : 'Confirm Return' }}
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- ═══ Lost/Damaged Modal ═══ -->
+@if (showLostModal) {
+  <div class="modal-overlay" (click)="closeLostModal()">
+    <div class="modal" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>⚠️ Mark Lost / Damaged</h3>
+        <button class="modal-close" (click)="closeLostModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        <p class="modal-info">Book: <strong>{{ borrowing?.bookTitle }}</strong></p>
+        <p class="modal-info">Member: <strong>{{ borrowing?.memberName }}</strong></p>
+        <div class="form-group">
+          <label>Type *</label>
+          <div class="radio-group">
+            <label class="radio-label">
+              <input type="radio" [(ngModel)]="lossType" value="Lost" /> Lost
+            </label>
+            <label class="radio-label">
+              <input type="radio" [(ngModel)]="lossType" value="Damaged" /> Damaged
+            </label>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Reason / Notes *</label>
+          <textarea [(ngModel)]="lossReason" rows="3" placeholder="Describe what happened..." class="form-control" required></textarea>
+        </div>
+        <p class="modal-note">⚠ A fine will be auto-calculated based on the {{ lossType === 'Lost' ? 'LostBook' : 'DamagedBook' }} fine rule.</p>
+      </div>
+      <div class="modal-footer">
+        <button (click)="closeLostModal()" class="btn-cancel">Cancel</button>
+        <button (click)="confirmLost()" class="btn-lost" [disabled]="actionLoading || !lossReason.trim()">
+          {{ actionLoading ? 'Processing...' : 'Confirm ' + lossType }}
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- ═══ Pickup Reserved Modal ═══ -->
+@if (showPickupModal) {
+  <div class="modal-overlay" (click)="closePickupModal()">
+    <div class="modal" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>🔖 Issue Reserved Copy</h3>
+        <button class="modal-close" (click)="closePickupModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        <p class="modal-info">Physical Copy ID: <strong>{{ borrowing?.physicalCopyId }}</strong></p>
+        <p class="modal-info">Book: <strong>{{ borrowing?.bookTitle }}</strong></p>
+        <div class="form-group">
+          <label>Member ID *</label>
+          <input type="number" [(ngModel)]="pickupMemberId" placeholder="Enter member ID" class="form-control" />
+        </div>
+        <p class="modal-note">This will create a new borrowing record and set copy status to Borrowed.</p>
+      </div>
+      <div class="modal-footer">
+        <button (click)="closePickupModal()" class="btn-cancel">Cancel</button>
+        <button (click)="confirmPickup()" class="btn-approve" [disabled]="actionLoading || !pickupMemberId">
+          {{ actionLoading ? 'Processing...' : 'Issue to Member' }}
+        </button>
+      </div>
+    </div>
+  </div>
+}

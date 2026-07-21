@@ -1,0 +1,402 @@
+﻿<div class="report-wrapper">
+
+  <!-- ── Screen Toolbar ── -->
+  <div class="toolbar no-print">
+    <div class="toolbar-left">
+      <button class="btn btn-secondary" (click)="back()">
+        <span>←</span> Back to Reports
+      </button>
+      @if (order) {
+        <div class="toolbar-title">
+          <span class="title-label">Purchase Order</span>
+          <span class="title-number">{{ order.pO_Number }}</span>
+        </div>
+      }
+    </div>
+    <div class="toolbar-right">
+      <button class="btn btn-primary" (click)="print()">
+        <span>🖨️</span> Print / Save PDF
+      </button>
+    </div>
+  </div>
+
+  <!-- ── Alerts ── -->
+  @if (error) {
+    <div class="alert alert-error no-print"><span>⚠️</span> {{ error }}</div>
+  }
+  @if (loading) {
+    <div class="alert alert-info no-print"><span>⏳</span> Loading Purchase Order Report…</div>
+  }
+
+  @if (!loading && order) {
+
+    <!-- ── Filter / View Controls ── -->
+    <div class="filter-section no-print">
+      <div class="filter-left">
+        <!-- Search field select + search box inline (req #2: no extra label) -->
+        <div class="search-inline-group">
+          <select [(ngModel)]="itemSearchType" (ngModelChange)="updateFilteredItems()" class="search-type-select">
+            @for (opt of itemSearchOptions; track opt.value) {
+              <option [value]="opt.value">{{ opt.label }}</option>
+            }
+          </select>
+          <label class="search-box">
+            <span class="search-icon">🔍</span>
+            <input
+              type="text"
+              placeholder="Filter items…"
+              [value]="searchQuery"
+              (input)="onSearchChange($any($event.target).value)"
+              class="search-input"
+            />
+            @if (searchQuery) {
+              <span class="search-count">{{ filteredItems.length }}</span>
+            }
+          </label>
+        </div>
+      </div>
+      <div class="filter-right">
+        <div class="view-toggle">
+          <button [class.active]="viewMode === 'detail'"  (click)="setViewMode('detail')"  class="view-btn">📄 Detail</button>
+          <button [class.active]="viewMode === 'preview'" (click)="setViewMode('preview')" class="view-btn">👁️ Preview</button>
+          <button [class.active]="viewMode === 'list'"    (click)="setViewMode('list')"    class="view-btn">📋 List</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════
+         REPORT PAGE  —  this div is what gets printed
+         ══════════════════════════════════════════════ -->
+    <div class="report-page">
+
+      <!-- Document Header -->
+      <div class="report-header">
+        <div class="header-left">
+          <div class="org-logo">📚</div>
+          <div class="org-info">
+            <div class="org-name">Library Management System</div>
+            <div class="org-dept">Procurement &amp; Inventory Department</div>
+            <div class="org-tagline">Official Procurement Document</div>
+          </div>
+        </div>
+        <div class="header-right">
+          <div class="doc-type">PURCHASE ORDER</div>
+          <div class="doc-number">{{ order.pO_Number }}</div>
+          <div class="doc-date">{{ order.orderDate | date:'mediumDate' }}</div>
+        </div>
+      </div>
+
+      <div class="header-divider"></div>
+
+      <!-- Info Cards Row — compact, all on one row -->
+      <div class="info-cards">
+        <div class="info-card">
+          <span class="card-label">Supplier</span>
+          <span class="card-value">{{ order.supplierName || '—' }}</span>
+        </div>
+        <div class="info-card">
+          <span class="card-label">Order Date</span>
+          <span class="card-value">{{ order.orderDate | date:'dd MMM yyyy' }}</span>
+        </div>
+        <div class="info-card">
+          <span class="card-label">Expected Delivery</span>
+          <span class="card-value">{{ order.receiveDate ? (order.receiveDate | date:'dd MMM yyyy') : '—' }}</span>
+        </div>
+        <div class="info-card">
+          <span class="card-label">Approved Date</span>
+          <span class="card-value">{{ order.approvedDate ? (order.approvedDate | date:'dd MMM yyyy') : '—' }}</span>
+        </div>
+        <div class="info-card">
+          <span class="card-label">Status</span>
+          <span class="card-value">
+            <span class="status-badge" [ngClass]="'status-' + statusClass(order.status)">
+              {{ statusLabel(order.status) }}
+            </span>
+          </span>
+        </div>
+        <!-- req #1: Additional cost compact, top-right in info cards -->
+        <div class="info-card info-card-cost">
+          <span class="card-label">Additional Charges</span>
+          <span class="card-value cost-chip">৳ {{ (order.additionalCharge || 0).toFixed(2) }}</span>
+        </div>
+      </div>
+
+      @if (order.notes) {
+        <div class="notes-bar">
+          <span class="notes-label">📝 Notes:</span>
+          <span class="notes-text">{{ order.notes }}</span>
+        </div>
+      }
+
+      <!-- ── DETAIL VIEW ── -->
+      @if (viewMode === 'detail') {
+        <div class="view-container">
+          <div class="section-header">
+            <h3>📋 Order Items</h3>
+            <span class="item-count">{{ filteredItems.length }} item(s)</span>
+          </div>
+
+          <div class="table-wrapper">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th class="col-number">#</th>
+                  <th>Book Title</th>
+                  <th>Edition</th>
+                  <th class="col-number">Ordered</th>
+                  <th class="col-number">Received</th>
+                  <th class="col-number">Remaining</th>
+                  <th class="col-number">Unit (৳)</th>
+                  <th class="col-number">Total (৳)</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (item of filteredItems; track item.purchaseOrderItemId; let idx = $index) {
+                  <tr [class.even-row]="idx % 2 === 0">
+                    <td class="col-number text-muted">{{ idx + 1 }}</td>
+                    <td class="font-semibold">{{ item.bookTitle || '—' }}</td>
+                    <td class="text-muted">{{ item.edition || '—' }}</td>
+                    <td class="col-number">{{ item.orderedQuantity ?? 0 }}</td>
+                    <td class="col-number text-success">{{ item.receivedQuantity ?? 0 }}</td>
+                    <td class="col-number">
+                      @if ((item.remainingQuantity ?? 0) === 0) {
+                        <span class="badge badge-success">✓</span>
+                      } @else {
+                        <span class="text-danger font-semibold">{{ item.remainingQuantity }}</span>
+                      }
+                    </td>
+                    <td class="col-number">{{ item.unitCost != null ? item.unitCost.toFixed(2) : '—' }}</td>
+                    <td class="col-number font-semibold">
+                      {{ ((item.unitCost || 0) * (item.orderedQuantity || 0)).toFixed(2) }}
+                    </td>
+                  </tr>
+                }
+                @if (filteredItems.length === 0) {
+                  <tr>
+                    <td colspan="8">
+                      <div class="empty-state">
+                        <div class="empty-icon">📭</div>
+                        <div class="empty-text">No items match your search.</div>
+                      </div>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+              <tfoot>
+                <tr>
+                  <td colspan="6" class="text-right font-bold" style="padding-right:8px">Items Subtotal</td>
+                  <td></td>
+                  <td class="col-number font-bold text-info">{{ orderTotal.toFixed(2) }}</td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+
+          <!-- req #3: Grand Total compact block, right-aligned -->
+          <div class="grand-total-block">
+            <div class="gt-row">
+              <span class="gt-label">Items Subtotal</span>
+              <span class="gt-value">৳ {{ orderTotal.toFixed(2) }}</span>
+            </div>
+            <div class="gt-row">
+              <span class="gt-label">Additional Charges</span>
+              <span class="gt-value">৳ {{ (order.additionalCharge || 0).toFixed(2) }}</span>
+            </div>
+            <div class="gt-row gt-final">
+              <span class="gt-label">Grand Total</span>
+              <span class="gt-value">৳ {{ (orderTotal + (order.additionalCharge || 0)).toFixed(2) }}</span>
+            </div>
+          </div>
+
+          <!-- Compact Statistics inline -->
+          <div class="stats-strip">
+            <div class="strip-item">
+              <span class="strip-val text-info">{{ totalOrdered }}</span>
+              <span class="strip-lbl">Ordered</span>
+            </div>
+            <div class="strip-sep">|</div>
+            <div class="strip-item">
+              <span class="strip-val text-success">{{ totalReceived }}</span>
+              <span class="strip-lbl">Received</span>
+            </div>
+            <div class="strip-sep">|</div>
+            <div class="strip-item">
+              <span class="strip-val text-danger">{{ totalRemaining }}</span>
+              <span class="strip-lbl">Pending</span>
+            </div>
+            <div class="strip-sep">|</div>
+            <div class="strip-item">
+              <span class="strip-val" [class.text-success]="fulfillmentRate === 100" [class.text-danger]="fulfillmentRate < 50">
+                {{ fulfillmentRate | number:'1.1-1' }}%
+              </span>
+              <span class="strip-lbl">Fulfillment</span>
+            </div>
+          </div>
+        </div>
+      }
+
+      <!-- ── PREVIEW VIEW ── -->
+      @if (viewMode === 'preview') {
+        <div class="view-container">
+          <div class="section-header">
+            <h3>👁️ Order Summary</h3>
+          </div>
+
+          <div class="preview-grid">
+            <div class="preview-card">
+              <div class="preview-icon">📦</div>
+              <div class="stat-number">{{ order.items?.length || 0 }}</div>
+              <div class="stat-text">Book Titles</div>
+            </div>
+            <div class="preview-card">
+              <div class="preview-icon">🔢</div>
+              <div class="stat-number">{{ totalOrdered }}</div>
+              <div class="stat-text">Copies Ordered</div>
+            </div>
+            <div class="preview-card">
+              <div class="preview-icon">✅</div>
+              <div class="stat-number">{{ totalReceived }}</div>
+              <div class="stat-text">Copies Received</div>
+            </div>
+            <div class="preview-card">
+              <div class="preview-icon">⏳</div>
+              <div class="stat-number">{{ totalRemaining }}</div>
+              <div class="stat-text">Pending</div>
+            </div>
+            <div class="preview-card">
+              <div class="preview-icon">📊</div>
+              <div class="stat-number">{{ fulfillmentRate | number:'1.1-1' }}%</div>
+              <div class="stat-text">Fulfillment</div>
+            </div>
+            <div class="preview-card preview-card-total">
+              <div class="preview-icon">💰</div>
+              <div class="stat-number" style="font-size:14px">৳ {{ (orderTotal + (order.additionalCharge || 0)).toFixed(2) }}</div>
+              <div class="stat-text">Grand Total</div>
+            </div>
+          </div>
+
+          <div class="progress-section">
+            <div class="progress-label">
+              <span>Order Fulfillment Progress</span>
+              <span class="progress-value">{{ fulfillmentRate | number:'1.1-1' }}%</span>
+            </div>
+            <div class="progress-bar">
+              <div class="progress-fill" [style.width.%]="fulfillmentRate"></div>
+            </div>
+            <div class="progress-info">
+              <strong>{{ totalReceived }}</strong> received of <strong>{{ totalOrdered }}</strong> ordered
+            </div>
+          </div>
+
+          <!-- req #3: Grand total in preview too -->
+          <div class="grand-total-block">
+            <div class="gt-row">
+              <span class="gt-label">Items Subtotal</span>
+              <span class="gt-value">৳ {{ orderTotal.toFixed(2) }}</span>
+            </div>
+            <div class="gt-row">
+              <span class="gt-label">Additional Charges</span>
+              <span class="gt-value">৳ {{ (order.additionalCharge || 0).toFixed(2) }}</span>
+            </div>
+            <div class="gt-row gt-final">
+              <span class="gt-label">Grand Total</span>
+              <span class="gt-value">৳ {{ (orderTotal + (order.additionalCharge || 0)).toFixed(2) }}</span>
+            </div>
+          </div>
+        </div>
+      }
+
+      <!-- ── LIST VIEW ── -->
+      @if (viewMode === 'list') {
+        <div class="view-container">
+          <div class="section-header">
+            <h3>📋 Item List</h3>
+            <span class="item-count">{{ filteredItems.length }} item(s)</span>
+          </div>
+          <div class="list-container">
+            @for (item of filteredItems; track item.purchaseOrderItemId) {
+              <div class="list-item">
+                <div class="list-item-header">
+                  <div class="list-item-title">{{ item.bookTitle || '—' }}</div>
+                  <span class="badge badge-info">{{ item.edition || 'N/A' }}</span>
+                </div>
+                <div class="list-item-meta">
+                  <span class="meta-item"><span class="meta-label">Ordered:</span><span class="meta-value">{{ item.orderedQuantity ?? 0 }}</span></span>
+                  <span class="meta-item"><span class="meta-label">Received:</span><span class="meta-value text-success">{{ item.receivedQuantity ?? 0 }}</span></span>
+                  <span class="meta-item"><span class="meta-label">Remaining:</span><span class="meta-value text-danger">{{ item.remainingQuantity ?? 0 }}</span></span>
+                  <span class="meta-item"><span class="meta-label">Unit:</span><span class="meta-value">৳ {{ item.unitCost != null ? item.unitCost.toFixed(2) : '0.00' }}</span></span>
+                  <span class="meta-item"><span class="meta-label">Line Total:</span><span class="meta-value font-bold">৳ {{ ((item.unitCost || 0) * (item.orderedQuantity || 0)).toFixed(2) }}</span></span>
+                </div>
+              </div>
+            }
+            @if (filteredItems.length === 0) {
+              <div class="empty-state">
+                <div class="empty-icon">📭</div>
+                <div class="empty-text">No items found matching your search.</div>
+              </div>
+            }
+          </div>
+
+          <!-- req #3: Grand total in list view too -->
+          <div class="grand-total-block" style="margin-top:16px">
+            <div class="gt-row">
+              <span class="gt-label">Items Subtotal</span>
+              <span class="gt-value">৳ {{ orderTotal.toFixed(2) }}</span>
+            </div>
+            <div class="gt-row">
+              <span class="gt-label">Additional Charges</span>
+              <span class="gt-value">৳ {{ (order.additionalCharge || 0).toFixed(2) }}</span>
+            </div>
+            <div class="gt-row gt-final">
+              <span class="gt-label">Grand Total</span>
+              <span class="gt-value">৳ {{ (orderTotal + (order.additionalCharge || 0)).toFixed(2) }}</span>
+            </div>
+          </div>
+        </div>
+      }
+
+      <div class="page-divider"></div>
+
+      <!-- Signatures — compact single row -->
+      <div class="signatures-section">
+        <div class="sig-block">
+          <div class="sig-line"></div>
+          <div class="sig-label">Prepared By</div>
+        </div>
+        <div class="sig-block">
+          <div class="sig-line"></div>
+          <div class="sig-label">Approved By</div>
+        </div>
+        <div class="sig-block">
+          <div class="sig-line"></div>
+          <div class="sig-label">Received By (Supplier)</div>
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <div class="report-footer">
+        <div class="footer-left">
+          <div class="footer-text">Library Management System</div>
+          <div class="footer-subtext">Procurement &amp; Inventory · Generated {{ today | date:'medium' }}</div>
+        </div>
+        <div class="footer-center">
+          <div class="footer-number">{{ order.pO_Number }}</div>
+          <div class="footer-subtext">Document Reference</div>
+        </div>
+        <div class="footer-right">
+          <div class="footer-text">Purchase Order Report</div>
+          <div class="footer-subtext">Page 1 of 1 · Confidential</div>
+        </div>
+      </div>
+
+    </div><!-- /report-page -->
+
+    <!-- req #4: Save / Cancel buttons — bottom right, outside report-page, screen only -->
+    <div class="action-bar no-print">
+      <button class="btn btn-secondary" (click)="back()">✕ Cancel</button>
+      <button class="btn btn-primary" (click)="print()">🖨️ Save PDF</button>
+    </div>
+
+  }
+
+</div><!-- /report-wrapper -->

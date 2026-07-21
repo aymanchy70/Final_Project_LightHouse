@@ -1,0 +1,52 @@
+<div class="container">
+  <div class="page-header">
+    <button (click)="cancel()" class="btn-back">← Back to Circulation</button>
+    <h2>📋 New Borrowing Request</h2>
+  </div>
+
+  <div class="form-card">
+    <div class="card-header">
+      <h3>Issue Book on Behalf of Member</h3>
+      <p class="subtitle">Creates a Pending borrow request. You can then approve it from the circulation list.</p>
+    </div>
+
+    @if (error) { <div class="alert-error">{{ error }}</div> }
+    @if (successMessage) { <div class="alert-success">{{ successMessage }}</div> }
+    @if (fieldError) { <div class="alert-warning">{{ fieldError }}</div> }
+
+    <div class="form-body">
+      <div class="form-group">
+        <label for="member">Member <span class="required">*</span></label>
+        @if (membersLoading) { <p class="loading-text">Loading members...</p> }
+        @else {
+          <select id="member" [(ngModel)]="memberId" class="form-control">
+            <option [ngValue]="null" disabled>— Select an approved member —</option>
+            @for (m of members; track m.memberId) {
+              <option [ngValue]="m.memberId">
+                #{{ m.memberId }} — {{ m.fullName }} ({{ m.membershipTypeName || 'No Type' }})
+              </option>
+            }
+          </select>
+          @if (members.length === 0) {
+            <p class="field-hint warn">No approved, unblocked members found.</p>
+          }
+        }
+        <p class="field-hint">Only approved, non-blocked members are listed.</p>
+      </div>
+
+      <div class="form-group">
+        <label for="copyId">Physical Copy ID <span class="required">*</span></label>
+        <input type="number" id="copyId" [(ngModel)]="physicalCopyId" placeholder="Enter the Physical Copy ID"
+          class="form-control" min="1" />
+        <p class="field-hint">The copy must have status "Available". Check the Physical Copies module for the ID.</p>
+      </div>
+
+      <div class="form-actions">
+        <button (click)="cancel()" class="btn-cancel">Cancel</button>
+        <button (click)="submit()" class="btn-submit" [disabled]="loading || membersLoading">
+          {{ loading ? '⏳ Creating...' : '📋 Create Request' }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

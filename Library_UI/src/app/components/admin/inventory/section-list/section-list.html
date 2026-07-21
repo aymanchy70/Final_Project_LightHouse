@@ -1,0 +1,122 @@
+<div class="container">
+  <div class="header">
+    <h2>📑 Sections</h2>
+    <a routerLink="/admin/location/sections/add" class="btn-add">+ Add Section</a>
+  </div>
+
+  <div class="toolbar">
+    <input 
+      type="text" 
+      [(ngModel)]="searchTerm" 
+      (input)="refresh()" 
+      placeholder=" Search by code, name, floor..." 
+      class="search-input" 
+    />
+  </div>
+
+  @if (error) { 
+    <div class="alert-error">{{ error }}</div> 
+  }
+  
+  @if (successMessage) { 
+    <div class="alert-success"> {{ successMessage }}</div> 
+  }
+  
+  @if (loading) { 
+    <div class="alert-info"> Loading...</div> 
+  }
+  
+  @if (!loading && filtered.length === 0 && !error) { 
+    <div class="alert-warning">No sections found.</div> 
+  }
+
+  @if (!loading && filtered.length > 0) {
+    <div class="table-responsive">
+      <table>
+        <thead>
+          <tr>
+            <th class="sortable" (click)="sortBy('sectionId')">
+              # {{ icon('sectionId') }}
+            </th>
+            <th class="sortable" (click)="sortBy('sectionCode')">
+              Code {{ icon('sectionCode') }}
+            </th>
+            <th class="sortable" (click)="sortBy('sectionName')">
+              Name {{ icon('sectionName') }}
+            </th>
+            <th class="sortable" (click)="sortBy('floorCode')">
+              Floor {{ icon('floorCode') }}
+            </th>
+            <th>DDC Range</th>
+            <th>Special</th>
+            <th class="sortable" (click)="sortBy('isActive')">
+              Status {{ icon('isActive') }}
+            </th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (item of paged; track item.sectionId) {
+            <tr>
+              <td>{{ item.sectionId }}</td>
+              <td>
+                <strong>{{ item.sectionCode }}</strong>
+              </td>
+              <td>{{ item.sectionName }}</td>
+              <td>{{ item.floorCode || '—' }}</td>
+              <td>
+                {{ item.ddcRangeStart || '—' }} - {{ item.ddcRangeEnd || '—' }}
+              </td>
+              <td class="text-center">
+                @if (item.isSpecial) { 
+                  <span class="badge-special">✓ Special</span> 
+                } @else { 
+                  <span class="badge-normal">—</span> 
+                }
+              </td>
+              <td>
+                @if (item.isActive) { 
+                  <span class="badge-active">Active</span> 
+                } @else { 
+                  <span class="badge-inactive">Inactive</span> 
+                }
+              </td>
+              <td class="actions">
+                <button 
+                  (click)="details(item.sectionId)" 
+                  class="btn-details" 
+                  title="View Details"
+                >
+                   Details
+                </button>
+                <button 
+                  (click)="edit(item.sectionId)" 
+                  class="btn-edit" 
+                  title="Edit Section"
+                >
+                   Edit
+                </button>
+                <button 
+                  (click)="delete(item.sectionId)" 
+                  class="btn-delete" 
+                  title="Delete Section"
+                >
+                  🗑️ Delete
+                </button>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    
+    <app-pagination
+      [currentPage]="currentPage"
+      [totalItems]="filtered.length"
+      [pageSize]="pageSize"
+      (pageChanged)="onPageChanged($event)"
+      (pageSizeChanged)="onPageSizeChanged($event)"
+    >
+    </app-pagination>
+  }
+</div>

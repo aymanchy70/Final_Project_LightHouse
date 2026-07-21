@@ -1,0 +1,77 @@
+<div class="container">
+  <div class="header">
+    <h2>📚 Books</h2>
+    <a routerLink="/admin/books/add" class="btn-add">+ Add Book</a>
+  </div>
+
+  <div class="toolbar">
+    <input type="text" [(ngModel)]="searchTerm" (input)="refresh()" placeholder=" Search title, ISBN, language..." class="search-input" />
+    <select [(ngModel)]="filterCategoryId" (change)="refresh()" class="filter-select">
+      <option [value]="0">All Categories</option>
+      @for (cat of categories; track cat.itemCategoryId) {
+        <option [value]="cat.itemCategoryId">{{ cat.categoryName }}</option>
+      }
+    </select>
+    <select [(ngModel)]="filterRare" (change)="refresh()" class="filter-select">
+      <option value="">All Types</option>
+      <option value="rare">Rare Books</option>
+      <option value="normal">Normal Books</option>
+    </select>
+  </div>
+
+  @if (error) { <div class="alert-error">{{ error }}</div> }
+  @if (successMessage) { <div class="alert-success"> {{ successMessage }}</div> }
+  @if (loading) { <div class="alert-info"> Loading...</div> }
+  @if (!loading && filtered.length === 0 && !error) { <div class="alert-warning">No books found.</div> }
+
+  @if (!loading && filtered.length > 0) {
+    <table>
+      <thead>
+        <tr>
+          <th class="sortable" (click)="sortBy('bookId')"># {{ icon('bookId') }}</th>
+          <th class="sortable" (click)="sortBy('title')">Title {{ icon('title') }}</th>
+          <th class="sortable" (click)="sortBy('language')">Language {{ icon('language') }}</th>
+          <th class="sortable" (click)="sortBy('publicationYear')">Year {{ icon('publicationYear') }}</th>
+          <th>Library Code</th>
+          <th>Call Number</th>
+          <th class="sortable" (click)="sortBy('isRareBook')">Rare {{ icon('isRareBook') }}</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (item of paged; track item.bookId) {
+          <tr>
+            <td>{{ item.bookId }}</td>
+            <td>
+              <strong>{{ item.title }}</strong>
+              @if (item.subtitle) { <br><small>{{ item.subtitle }}</small> }
+              @if (item.authors?.length) {
+                <br><small style="color:#64748b">by {{ item.authors[0].fullName }}{{ item.authors.length > 1 ? ' +' + (item.authors.length - 1) : '' }}</small>
+              }
+            </td>
+            <td>{{ item.language || '—' }}</td>
+            <td>{{ item.publicationYear || '—' }}</td>
+            <td><code style="font-size:12px;color:#4f6ef7">{{ item.baseLibraryCode || '—' }}</code></td>
+            <td><code style="font-size:12px">{{ item.callNumber || '—' }}</code></td>
+            <td>
+              @if (item.isRareBook) { <span class="badge-rare">Rare</span> }
+              @else { <span class="badge-normal">Normal</span> }
+            </td>
+            <td class="actions">
+              <button (click)="details(item.bookId)" class="btn-details"> Details</button>
+              <button (click)="edit(item.bookId)" class="btn-edit"> Edit</button>
+              <button (click)="delete(item.bookId)" class="btn-delete">🗑️ Delete</button>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+    <app-pagination
+      [currentPage]="currentPage"
+      [totalItems]="filtered.length"
+      [pageSize]="pageSize"
+      (pageChanged)="onPageChanged($event)"
+      (pageSizeChanged)="onPageSizeChanged($event)">
+    </app-pagination>
+  }
+</div>

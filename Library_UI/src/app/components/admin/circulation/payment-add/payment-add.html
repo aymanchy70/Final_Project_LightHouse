@@ -1,0 +1,80 @@
+<div class="container">
+  <div class="page-header">
+    <button (click)="goBack()" class="btn-back">← Back to Payments</button>
+    <h2>💳 Record Payment</h2>
+  </div>
+
+  @if (error) { <div class="alert-error">{{ error }}</div> }
+
+  <div class="form-card">
+
+    <div class="form-group">
+      <label>Member *</label>
+      <select [(ngModel)]="form.memberId" (change)="onMemberChange()">
+        <option [ngValue]="null">-- Select Member --</option>
+        @for (m of members; track m.memberId) {
+          <option [ngValue]="m.memberId">{{ m.fullName }} (ID: {{ m.memberId }})</option>
+        }
+      </select>
+    </div>
+
+    <!-- Member info panel -->
+    @if (loadingMember) { <div class="alert-info">Loading member info...</div> }
+    @if (selectedMember) {
+      <div class="member-panel">
+        <div class="member-row">
+          <span class="m-label">Status</span>
+          <span class="m-value">{{ selectedMember.membershipStatus }}</span>
+        </div>
+        <div class="member-row">
+          <span class="m-label">Outstanding Fine</span>
+          <span class="m-value fine-val">৳{{ selectedMember.outstandingFine | number:'1.2-2' }}</span>
+        </div>
+        <div class="member-row">
+          <span class="m-label">Membership Expiry</span>
+          <span class="m-value">{{ selectedMember.membershipExpiryDate ? (selectedMember.membershipExpiryDate | date:'mediumDate') : 'N/A' }}</span>
+        </div>
+      </div>
+    }
+
+    <div class="form-group">
+      <label>Payment Type *</label>
+      <select [(ngModel)]="form.paymentType">
+        <option value="Fine">Fine</option>
+        <option value="MembershipFee">Membership Fee</option>
+      </select>
+      @if (form.paymentType === 'MembershipFee') {
+        <small class="hint">Amount must exactly match the membership type's yearly fee.</small>
+      }
+      @if (form.paymentType === 'Fine') {
+        <small class="hint">Amount cannot exceed the member's outstanding fine.</small>
+      }
+    </div>
+
+    <div class="form-group">
+      <label>Amount (৳) *</label>
+      <input type="number" [(ngModel)]="form.amount" min="0.01" step="0.01" placeholder="0.00" />
+    </div>
+
+    <div class="form-group">
+      <label>Payment Method</label>
+      <select [(ngModel)]="form.paymentMethod">
+        <option value="Cash">Cash</option>
+        <option value="Card">Card</option>
+        <option value="Online">Online</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label>Notes</label>
+      <textarea [(ngModel)]="form.notes" rows="3" placeholder="Optional notes..."></textarea>
+    </div>
+
+    <div class="form-actions">
+      <button (click)="goBack()" class="btn-cancel">Cancel</button>
+      <button (click)="submit()" class="btn-submit" [disabled]="submitting">
+        {{ submitting ? 'Saving...' : 'Record Payment' }}
+      </button>
+    </div>
+  </div>
+</div>

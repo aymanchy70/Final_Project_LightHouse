@@ -1,0 +1,54 @@
+<div class="container">
+  <div class="header">
+    <h2>📂 Item Categories</h2>
+    <a routerLink="/admin/item-categories/add" class="btn-add">+ Add Category</a>
+  </div>
+
+  <div class="toolbar">
+    <input type="text" [(ngModel)]="searchTerm" (input)="refresh()" placeholder=" Search name or description..." class="search-input" />
+  </div>
+
+  @if (error) { <div class="alert-error">{{ error }}</div> }
+  @if (successMessage) { <div class="alert-success"> {{ successMessage }}</div> }
+  @if (loading) { <div class="alert-info"> Loading...</div> }
+  @if (!loading && filtered.length === 0 && !error) { <div class="alert-warning">No categories found.</div> }
+
+  @if (!loading && filtered.length > 0) {
+    <table>
+      <thead>
+        <tr>
+          <th class="sortable" (click)="sortBy('itemCategoryId')"># {{ icon('itemCategoryId') }}</th>
+          <th class="sortable" (click)="sortBy('categoryName')">Name {{ icon('categoryName') }}</th>
+          <th>Description</th>
+          <th class="sortable" (click)="sortBy('isActive')">Status {{ icon('isActive') }}</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (item of paged; track item.itemCategoryId) {
+          <tr>
+            <td>{{ item.itemCategoryId }}</td>
+            <td><strong>{{ item.categoryName }}</strong></td>
+            <td>{{ item.categoryDescription || '—' }}</td>
+            <td>
+              @if (item.isActive) { <span class="badge-active">Active</span> }
+              @else { <span class="badge-inactive">Inactive</span> }
+            </td>
+            <td class="actions">
+              <button (click)="details(item.itemCategoryId)" class="btn-details"> Details</button>
+              <button (click)="edit(item.itemCategoryId)" class="btn-edit"> Edit</button>
+              <button (click)="delete(item.itemCategoryId)" class="btn-delete">🗑️ Delete</button>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+    <app-pagination
+      [currentPage]="currentPage"
+      [totalItems]="filtered.length"
+      [pageSize]="pageSize"
+      (pageChanged)="onPageChanged($event)"
+      (pageSizeChanged)="onPageSizeChanged($event)">
+    </app-pagination>
+  }
+</div>

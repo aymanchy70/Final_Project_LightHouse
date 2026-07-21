@@ -1,0 +1,12 @@
+@import '../book-add-edit/book-add-edit.css';
+
+.checkbox-row label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-transform: none;
+  font-size: 14px;
+  color: #334155;
+  font-weight: 500;
+}
+.checkbox-row input { width: auto; margin: 0; }

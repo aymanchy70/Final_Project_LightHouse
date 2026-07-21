@@ -1,0 +1,242 @@
+<div class="rm-page">
+  <div class="rm-header">
+    <h2>🔐 Role Manager</h2>
+    <p>Manage roles, permissions, and user assignments</p>
+  </div>
+
+  @if (msg) {
+    <div class="rm-alert"
+      [class.rm-alert-error]="msg.type === 'error'"
+      [class.rm-alert-success]="msg.type === 'success'">
+      {{ msg.type === 'success' ? '✅' : '⚠️' }} {{ msg.text }}
+    </div>
+  }
+
+  <div class="rm-grid">
+    <div class="rm-col">
+      <div class="rm-card">
+        <div class="rm-card-title">📋 Role List</div>
+        <table class="rm-table">
+          <thead>
+            <tr>
+              <th>Role Name</th>
+              <th>Permissions</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            @if (roles.length === 0) {
+              <tr>
+                <td colspan="3" class="rm-empty">No roles found.</td>
+              </tr>
+            }
+            @for (role of roles; track role.id) {
+              <tr>
+                <td><strong>{{ role.name }}</strong></td>
+                <td>
+                  @if (isAdminRole(role.name)) {
+                    <span class="rm-perm-count rm-perm-all">⭐ All Access</span>
+                  } @else {
+                    <span class="rm-perm-count">{{ permissionCount(role) }} assigned</span>
+                  }
+                </td>
+                <td class="rm-actions">
+                  @if (!isAdminRole(role.name)) {
+                    <button type="button" (click)="openPermissionModal(role.name)" class="rm-btn-perm">
+                      🛡️ Permissions
+                    </button>
+                  }
+                  <button type="button" (click)="deleteRole(role.name)" class="rm-btn-del">🗑️ Delete</button>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <div class="rm-card">
+        <div class="rm-card-title">➕ Create New Role</div>
+        <div class="rm-form-group">
+          <label>Role Name</label>
+          <input type="text" [(ngModel)]="newRoleName" placeholder="e.g. Librarian, Viewer" (keyup.enter)="createRole()" />
+        </div>
+        <button type="button" (click)="createRole()" class="rm-btn-primary">Create Role</button>
+      </div>
+    </div>
+
+    <div class="rm-col">
+      <div class="rm-card">
+        <div class="rm-card-title">👤 Add Role to User</div>
+        <div class="rm-form-group">
+          <label>User</label>
+          <select [(ngModel)]="assignUserId">
+            <option [ngValue]="null" disabled>Select User...</option>
+            @for (u of users; track u.id) {
+              <option [ngValue]="u.id">{{ u.email }}</option>
+            }
+          </select>
+        </div>
+        <div class="rm-form-group">
+          <label>Role</label>
+          <select [(ngModel)]="assignRoleName">
+            <option value="" disabled>Select Role...</option>
+            @for (r of roles; track r.id) {
+              <option [value]="r.name">{{ r.name }}</option>
+            }
+          </select>
+        </div>
+        <button type="button" (click)="assignRole()" class="rm-btn-primary">Assign Role</button>
+      </div>
+
+      <div class="rm-card">
+        <div class="rm-card-title">📄 List Roles for User</div>
+        <div class="rm-form-group">
+          <label>Select User</label>
+          <select [(ngModel)]="listUserId">
+            <option [ngValue]="null" disabled>Select User...</option>
+            @for (u of users; track u.id) {
+              <option [ngValue]="u.id">{{ u.email }}</option>
+            }
+          </select>
+        </div>
+        <button type="button" (click)="listUserRoles()" class="rm-btn-secondary">Get Roles</button>
+        @if (listedUserRoles.length > 0) {
+          <div class="rm-role-result">
+            <strong>{{ listedUserEmail }}</strong> has roles:
+            <div class="rm-role-tags">
+              @for (r of listedUserRoles; track r) {
+                <span class="rm-tag">{{ r }}</span>
+              }
+            </div>
+          </div>
+        }
+        @if (listUserId && listedUserRoles.length === 0 && listedUserEmail) {
+          <div class="rm-role-result rm-muted">No roles assigned to this user.</div>
+        }
+      </div>
+
+      <div class="rm-card">
+        <div class="rm-card-title">❌ Remove Role from User</div>
+        <div class="rm-form-group">
+          <label>User</label>
+          <select [(ngModel)]="removeUserId">
+            <option [ngValue]="null" disabled>Select User...</option>
+            @for (u of users; track u.id) {
+              <option [ngValue]="u.id">{{ u.email }}</option>
+            }
+          </select>
+        </div>
+        <div class="rm-form-group">
+          <label>Role</label>
+          <select [(ngModel)]="removeRoleName">
+            <option value="" disabled>Select Role...</option>
+            @for (r of roles; track r.id) {
+              <option [value]="r.name">{{ r.name }}</option>
+            }
+          </select>
+        </div>
+        <button type="button" (click)="removeRoleFromUser()" class="rm-btn-danger">Remove Role</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+@if (permissionModalRole) {
+  <div class="rm-modal-overlay" (click)="closePermissionModal()" role="presentation"></div>
+  <div class="rm-modal" role="dialog" aria-labelledby="perm-modal-title" (click)="$event.stopPropagation()">
+    <div class="rm-modal-header">
+      <div>
+        <h3 id="perm-modal-title">🛡️ Role Permissions</h3>
+        <p>Role: <strong>{{ permissionModalRole }}</strong></p>
+      </div>
+      <button type="button" class="rm-close" (click)="closePermissionModal()" aria-label="Close">✕</button>
+    </div>
+
+    <div class="rm-modal-body">
+      @if (permissionsLoading) {
+        <p class="rm-modal-loading">Loading permission matrix...</p>
+      } @else {
+        <p class="rm-panel-hint">Check permissions to grant access. Changes save immediately.</p>
+        <div class="rm-matrix-wrap">
+          <table class="rm-matrix">
+            <thead>
+              <tr>
+                <!-- Module column header -->
+                <th class="rm-matrix-module">Module</th>
+                <!-- Grant All column header -->
+                <th class="rm-matrix-action rm-col-grant">Grant All</th>
+                @for (action of actionColumns; track action) {
+                  <th class="rm-matrix-action">{{ action }}</th>
+                }
+              </tr>
+            </thead>
+            <tbody>
+              @for (row of permissionMatrix; track row.resource) {
+                <tr>
+                  <th class="rm-matrix-module" scope="row">{{ row.label }}</th>
+
+                  <!-- ✅ NEW: Row-level "Grant All" checkbox -->
+                  <td class="rm-matrix-cell rm-cell-grant">
+                    <label class="rm-checkbox rm-checkbox-row"
+                           [title]="isRowFullyChecked(row) ? 'Deselect all for ' + row.label : 'Select all for ' + row.label">
+                      <input
+                        type="checkbox"
+                        [checked]="isRowFullyChecked(row)"
+                        [indeterminate]="isRowIndeterminate(row)"
+                        (change)="toggleRow(row)" />
+                      <span class="rm-check-ui rm-check-row"></span>
+                    </label>
+                  </td>
+
+                  @for (action of actionColumns; track action) {
+                    <td class="rm-matrix-cell" [class.rm-cell-na]="!actionApplies(row, action)">
+                      @if (actionApplies(row, action)) {
+                        <label class="rm-checkbox">
+                          <input
+                            type="checkbox"
+                            [checked]="hasPermission(row.resource, action)"
+                            [disabled]="isKeyPending(permKey(row.resource, action)) || bulkRunning"
+                            (change)="toggleMatrixPermission(row, action)" />
+                          <span class="rm-check-ui"></span>
+                        </label>
+                      } @else {
+                        <span class="rm-na">—</span>
+                      }
+                    </td>
+                  }
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+
+        <!-- ✅ NEW: Select All / Deselect All bar -->
+        <div class="rm-select-all-bar">
+          <span class="rm-select-all-label">
+            {{ currentPermissions.length }} permission(s) enabled
+          </span>
+          <div class="rm-select-all-actions">
+            <button
+              type="button"
+              class="rm-btn-select-all"
+              [disabled]="isAllSelected || bulkRunning"
+              (click)="selectAll()">
+              ✅ Select All
+            </button>
+            <button
+              type="button"
+              class="rm-btn-deselect-all"
+              [disabled]="currentPermissions.length === 0 || bulkRunning"
+              (click)="deselectAll()">
+              ✕ Deselect All
+            </button>
+          </div>
+        </div>
+      }
+    </div>
+
+    <div class="rm-modal-footer">
+      <button type="button" class="rm-btn-secondary rm-btn-inline" (click)="closePermissionModal()">Done</button>
+    </div>
+  </div>
+}

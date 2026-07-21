@@ -1,0 +1,86 @@
+﻿@page "/authors"
+@using Final_Project_Maui.Models
+@using Final_Project_Maui.Services
+@inject AuthorService AuthorService
+@inject NavigationManager Navigation
+
+<h3>Authors</h3>
+
+<button class="btn btn-primary mb-3" @onclick="GoToAdd">
+    Add Author
+</button>
+
+@if (authors == null)
+{
+    <p>Loading...</p>
+}
+else if (authors.Count == 0)
+{
+    <p>No authors found.</p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr><th>ID</th><th>Full Name</th><th>Pseudonym</th><th>Nationality</th><th>Active</th><th>Actions</th></tr>
+        </thead>
+        <tbody>
+            @foreach (var a in authors)
+            {
+                <tr>
+                    <td>@a.AuthorId</td>
+                    <td>@a.FullName</td>
+                    <td>@a.Pseudonym</td>
+                    <td>@a.Nationality</td>
+                    <td>@(a.IsActive ? "Yes" : "No")</td>
+                    <td>
+                        <button class="btn btn-warning btn-sm" @onclick="() => Edit(a.AuthorId)">Edit</button>
+                        <button class="btn btn-danger btn-sm" @onclick="() => Delete(a.AuthorId)">Delete</button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private List<AuthorDto>? authors;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadAuthors();
+    }
+
+    private async Task LoadAuthors()
+    {
+        authors = await AuthorService.GetAuthorsAsync();
+        StateHasChanged();
+    }
+
+    private void GoToAdd()
+    {
+        Navigation.NavigateTo("/authors/add");
+    }
+
+    private void Edit(int id)
+    {
+        Navigation.NavigateTo("/authors/edit/" + id);  // use + instead of $
+    }
+
+    private async Task Delete(int id)
+    {
+        bool confirm = await Application.Current.MainPage.DisplayAlert("Confirm", "Delete this author?", "Yes", "No");
+        if (confirm)
+        {
+            try
+            {
+                await AuthorService.DeleteAuthorAsync(id);
+                await LoadAuthors();
+            }
+            catch (Exception ex)
+            {
+                await Application.Current.MainPage.DisplayAlert("Error", ex.Message, "OK");
+            }
+        }
+    }
+}

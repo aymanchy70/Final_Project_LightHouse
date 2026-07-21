@@ -1,0 +1,61 @@
+<div class="container">
+  <div class="header">
+    <h2>💰 Fine Rules</h2>
+    <a routerLink="/admin/fine-rules/add" class="btn-add">+ Add Rule</a>
+  </div>
+
+  <div class="toolbar">
+    <input type="text" [(ngModel)]="searchTerm" (input)="refresh()" placeholder=" Search rule name or type..." class="search-input" />
+  </div>
+
+  @if (error) { <div class="alert-error">{{ error }}</div> }
+  @if (successMessage) { <div class="alert-success"> {{ successMessage }}</div> }
+  @if (loading) { <div class="alert-info"> Loading...</div> }
+  @if (!loading && filtered.length === 0 && !error) { <div class="alert-warning">No fine rules found.</div> }
+
+  @if (!loading && filtered.length > 0) {
+    <table>
+      <thead>
+        <tr>
+          <th class="sortable" (click)="sortBy('fineRuleId')"># {{ icon('fineRuleId') }}</th>
+          <th class="sortable" (click)="sortBy('ruleName')">Rule Name {{ icon('ruleName') }}</th>
+          <th class="sortable" (click)="sortBy('fineType')">Type {{ icon('fineType') }}</th>
+          <th>Amount</th>
+          <th>Max Fine</th>
+          <th>Grace Days</th>
+          <th class="sortable" (click)="sortBy('isActive')">Status {{ icon('isActive') }}</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (item of paged; track item.fineRuleId) {
+          <tr>
+            <td>{{ item.fineRuleId }}</td>
+            <td><strong>{{ item.ruleName }}</strong></td>
+            <td><span class="badge-active" style="font-size:11px">{{ item.fineType }}</span></td>
+            <td>
+              @if (item.fineType === 'Fixed') { ৳{{ item.fineAmount || 0 }} }
+              @else if (item.fineType === 'PerDay') { ৳{{ item.finePerDay || 0 }}/day }
+              @else { {{ item.percentageOfBookPrice || 0 }}% }
+            </td>
+            <td>{{ item.maxFineAmount ? '৳' + item.maxFineAmount : '—' }}</td>
+            <td>{{ item.gracePeriodDays }} days</td>
+            <td>
+              <button class="toggle-btn" [class.active]="item.isActive" (click)="toggleActive(item)" [title]="item.isActive ? 'Click to Deactivate' : 'Click to Activate'">
+                {{ item.isActive ? "✅ Active" : "⬜ Inactive" }}
+              </button>
+            </td>
+            <td class="actions">
+              <button (click)="details(item.fineRuleId)" class="btn-details"> Details</button>
+              <button (click)="edit(item.fineRuleId)" class="btn-edit"> Edit</button>
+              <button (click)="delete(item.fineRuleId)" class="btn-delete">🗑️ Delete</button>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+    <app-pagination [currentPage]="currentPage" [totalItems]="filtered.length" [pageSize]="pageSize"
+      (pageChanged)="onPageChanged($event)" (pageSizeChanged)="onPageSizeChanged($event)">
+    </app-pagination>
+  }
+</div>

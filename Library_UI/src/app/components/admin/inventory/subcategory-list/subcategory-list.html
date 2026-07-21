@@ -1,0 +1,62 @@
+<div class="container">
+  <div class="header">
+    <h2>📁 Sub Categories</h2>
+    <a routerLink="/admin/sub-categories/add" class="btn-add">+ Add SubCategory</a>
+  </div>
+
+  <div class="toolbar">
+    <input type="text" [(ngModel)]="searchTerm" (input)="refresh()" placeholder=" Search name or description..." class="search-input" />
+    <select [(ngModel)]="filterCategoryId" (change)="refresh()" class="filter-select">
+      <option [value]="0">All Categories</option>
+      @for (cat of categories; track cat.itemCategoryId) {
+        <option [value]="cat.itemCategoryId">{{ cat.categoryName }}</option>
+      }
+    </select>
+  </div>
+
+  @if (error) { <div class="alert-error">{{ error }}</div> }
+  @if (successMessage) { <div class="alert-success"> {{ successMessage }}</div> }
+  @if (loading) { <div class="alert-info"> Loading...</div> }
+  @if (!loading && filtered.length === 0 && !error) { <div class="alert-warning">No subcategories found.</div> }
+
+  @if (!loading && filtered.length > 0) {
+    <table>
+      <thead>
+        <tr>
+          <th class="sortable" (click)="sortBy('subCategoryId')"># {{ icon('subCategoryId') }}</th>
+          <th class="sortable" (click)="sortBy('name')">Name {{ icon('name') }}</th>
+          <th>Description</th>
+          <th class="sortable" (click)="sortBy('categoryName')">Category {{ icon('categoryName') }}</th>
+          <th class="sortable" (click)="sortBy('isActive')">Status {{ icon('isActive') }}</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (item of paged; track item.subCategoryId) {
+          <tr>
+            <td>{{ item.subCategoryId }}</td>
+            <td><strong>{{ item.name }}</strong></td>
+            <td>{{ item.description || '—' }}</td>
+            <td>{{ item.categoryName }}</td>
+            <td>
+              @if (item.isActive) { <span class="badge-active">Active</span> }
+              @else { <span class="badge-inactive">Inactive</span> }
+            </td>
+            <td class="actions">
+              <button (click)="details(item.subCategoryId)" class="btn-details"> Details</button>
+              <button (click)="edit(item.subCategoryId)" class="btn-edit"> Edit</button>
+              <button (click)="delete(item.subCategoryId)" class="btn-delete">🗑️ Delete</button>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+    <app-pagination
+      [currentPage]="currentPage"
+      [totalItems]="filtered.length"
+      [pageSize]="pageSize"
+      (pageChanged)="onPageChanged($event)"
+      (pageSizeChanged)="onPageSizeChanged($event)">
+    </app-pagination>
+  }
+</div>

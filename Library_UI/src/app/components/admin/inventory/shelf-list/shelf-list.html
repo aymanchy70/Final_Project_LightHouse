@@ -1,0 +1,118 @@
+<div class="container">
+  <div class="header">
+    <h2>Shelves</h2>
+    <a routerLink="/admin/location/shelves/add" class="btn-add">+ Add Shelf</a>
+  </div>
+
+  <div class="toolbar">
+    <input 
+      type="text" 
+      [(ngModel)]="searchTerm" 
+      (input)="refresh()" 
+      placeholder=" Search by code, label, rack..." 
+      class="search-input" 
+    />
+  </div>
+
+  @if (error) { 
+    <div class="alert-error">{{ error }}</div> 
+  }
+  
+  @if (successMessage) { 
+    <div class="alert-success"> {{ successMessage }}</div> 
+  }
+  
+  @if (loading) { 
+    <div class="alert-info"> Loading...</div> 
+  }
+  
+  @if (!loading && filtered.length === 0 && !error) { 
+    <div class="alert-warning">No shelves found.</div> 
+  }
+
+  @if (!loading && filtered.length > 0) {
+    <div class="table-responsive">
+      <table>
+        <thead>
+          <tr>
+            <th class="sortable" (click)="sortBy('shelfId')">
+              # {{ icon('shelfId') }}
+            </th>
+            <th class="sortable" (click)="sortBy('shelfCode')">
+              Code {{ icon('shelfCode') }}
+            </th>
+            <th class="sortable" (click)="sortBy('shelfLabel')">
+              Label {{ icon('shelfLabel') }}
+            </th>
+            <th class="sortable" (click)="sortBy('rackCode')">
+              Rack {{ icon('rackCode') }}
+            </th>
+            <th class="sortable" (click)="sortBy('sectionCode')">
+              Section {{ icon('sectionCode') }}
+            </th>
+            <th class="sortable" (click)="sortBy('floorCode')">
+              Floor {{ icon('floorCode') }}
+            </th>
+            <th class="sortable" (click)="sortBy('isActive')">
+              Status {{ icon('isActive') }}
+            </th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (item of paged; track item.shelfId) {
+            <tr>
+              <td>{{ item.shelfId }}</td>
+              <td>
+                <strong>{{ item.shelfCode }}</strong>
+              </td>
+              <td>{{ item.shelfLabel }}</td>
+              <td>{{ item.rackCode || '—' }}</td>
+              <td>{{ item.sectionCode || '—' }}</td>
+              <td>{{ item.floorCode || '—' }}</td>
+              <td>
+                @if (item.isActive) { 
+                  <span class="badge-active">Active</span> 
+                } @else { 
+                  <span class="badge-inactive">Inactive</span> 
+                }
+              </td>
+              <td class="actions">
+                <button 
+                  (click)="details(item.shelfId)" 
+                  class="btn-details" 
+                  title="View Details"
+                >
+                   Details
+                </button>
+                <button 
+                  (click)="edit(item.shelfId)" 
+                  class="btn-edit" 
+                  title="Edit Shelf"
+                >
+                   Edit
+                </button>
+                <button 
+                  (click)="delete(item.shelfId)" 
+                  class="btn-delete" 
+                  title="Delete Shelf"
+                >
+                  🗑️ Delete
+                </button>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    
+    <app-pagination
+      [currentPage]="currentPage"
+      [totalItems]="filtered.length"
+      [pageSize]="pageSize"
+      (pageChanged)="onPageChanged($event)"
+      (pageSizeChanged)="onPageSizeChanged($event)"
+    >
+    </app-pagination>
+  }
+</div>

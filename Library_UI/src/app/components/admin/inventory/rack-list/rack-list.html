@@ -1,0 +1,114 @@
+<div class="container">
+  <div class="header">
+    <h2>🗄️ Racks</h2>
+    <a routerLink="/admin/location/racks/add" class="btn-add">+ Add Rack</a>
+  </div>
+
+  <div class="toolbar">
+    <input 
+      type="text" 
+      [(ngModel)]="searchTerm" 
+      (input)="refresh()" 
+      placeholder=" Search by code, name, section..." 
+      class="search-input" 
+    />
+  </div>
+
+  @if (error) { 
+    <div class="alert-error">{{ error }}</div> 
+  }
+  
+  @if (successMessage) { 
+    <div class="alert-success"> {{ successMessage }}</div> 
+  }
+  
+  @if (loading) { 
+    <div class="alert-info"> Loading...</div> 
+  }
+  
+  @if (!loading && filtered.length === 0 && !error) { 
+    <div class="alert-warning">No racks found.</div> 
+  }
+
+  @if (!loading && filtered.length > 0) {
+    <div class="table-responsive">
+      <table>
+        <thead>
+          <tr>
+            <th class="sortable" (click)="sortBy('rackId')">
+              # {{ icon('rackId') }}
+            </th>
+            <th class="sortable" (click)="sortBy('rackCode')">
+              Code {{ icon('rackCode') }}
+            </th>
+            <th class="sortable" (click)="sortBy('rackName')">
+              Name {{ icon('rackName') }}
+            </th>
+            <th class="sortable" (click)="sortBy('sectionCode')">
+              Section {{ icon('sectionCode') }}
+            </th>
+            <th class="sortable" (click)="sortBy('floorCode')">
+              Floor {{ icon('floorCode') }}
+            </th>
+            <th class="sortable" (click)="sortBy('isActive')">
+              Status {{ icon('isActive') }}
+            </th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (item of paged; track item.rackId) {
+            <tr>
+              <td>{{ item.rackId }}</td>
+              <td>
+                <strong>{{ item.rackCode }}</strong>
+              </td>
+              <td>{{ item.rackName }}</td>
+              <td>{{ item.sectionCode || '—' }}</td>
+              <td>{{ item.floorCode || '—' }}</td>
+              <td>
+                @if (item.isActive) { 
+                  <span class="badge-active">Active</span> 
+                } @else { 
+                  <span class="badge-inactive">Inactive</span> 
+                }
+              </td>
+              <td class="actions">
+                <button 
+                  (click)="details(item.rackId)" 
+                  class="btn-details" 
+                  title="View Details"
+                >
+                   Details
+                </button>
+                <button 
+                  (click)="edit(item.rackId)" 
+                  class="btn-edit" 
+                  title="Edit Rack"
+                >
+                   Edit
+                </button>
+                <button 
+                  (click)="delete(item.rackId)" 
+                  class="btn-delete" 
+                  title="Delete Rack"
+                >
+                  🗑️ Delete
+                </button>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    
+    <app-pagination
+      [currentPage]="currentPage"
+      [totalItems]="filtered.length"
+      [pageSize]="pageSize"
+      (pageChanged)="onPageChanged($event)"
+      (pageSizeChanged)="onPageSizeChanged($event)"
+    >
+    </app-pagination>
+  }
+</div>

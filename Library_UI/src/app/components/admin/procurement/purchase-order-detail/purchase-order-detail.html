@@ -1,0 +1,231 @@
+<div class="po-container">
+
+  <div class="po-header-bar">
+    <div>
+      <h2>📋 Purchase Order Detail</h2>
+      @if (order) { <p class="subtitle">{{ order.pO_Number }} &nbsp;·&nbsp; {{ order.supplierName }}</p> }
+    </div>
+    <div style="display:flex; gap:10px; align-items:center;">
+      <button (click)="goReport()" class="btn-report">🖨️ Print Report</button>
+      <button (click)="back()" class="btn-back">← Back to List</button>
+    </div>
+  </div>
+
+  @if (error)   { <div class="alert-error">{{ error }}</div> }
+  @if (success) { <div class="alert-success"> {{ success }}</div> }
+  @if (loading) { <div class="alert-info"> Loading...</div> }
+
+  @if (!loading && order) {
+    <div class="po-layout">
+
+      <div class="po-master">
+        <div class="po-document">
+
+          <div class="po-doc-header">
+            <div class="po-logo-area">
+              <div class="po-logo-box">📚</div>
+              <div>
+                <div class="po-company-name">Library Management System</div>
+                <div class="po-company-sub">Acquisition Department</div>
+              </div>
+            </div>
+            <div class="po-title-area">
+              <div class="po-doc-title">PURCHASE ORDER</div>
+              <div class="po-doc-meta">P.O. #: <em>{{ order.pO_Number }}</em></div>
+              <div class="po-doc-meta">DATE: {{ order.orderDate | date:'mediumDate' }}</div>
+            </div>
+          </div>
+
+          <hr class="po-divider" />
+
+<div class="po-box">
+  <div class="po-box-label">🏭 VENDOR</div>
+  <div style="font-size: 16px; font-weight: 700; color: #1e293b; padding: 8px 0;">
+    {{ order.supplierName || 'No supplier' }}
+  </div>
+</div>
+          <hr class="po-divider" />
+
+          <div class="po-shipping-row">
+            <div class="shipping-cell"><div class="sh-label">SHIPPING METHOD</div><div class="sh-val">Standard Delivery</div></div>
+            <div class="shipping-cell"><div class="sh-label">DELIVERY DATE</div><div class="sh-val">{{ order.receiveDate | date:'mediumDate' }}</div></div>
+            <div class="shipping-cell">
+              <div class="sh-label">STATUS</div>
+              <span class="status-badge {{ statusClass(order.status) }}">{{ statusIcon(order.status) }} {{ order.status }}</span>
+            </div>
+          </div>
+
+          <hr class="po-divider" />
+
+          <div class="po-section-label">ORDER LINE ITEMS</div>
+          <div class="items-table-wrap">
+            <table class="items-table">
+              <thead>
+                <tr>
+                  <th>QTY</th>
+                  <th>ITEM / BOOK EDITION</th>
+                  <th>UNIT PRICE (৳)</th>
+                  <th>LINE TOTAL (৳)</th>
+                  <th>RECEIVED</th>
+                  <th>REMAINING</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (item of order.items; track item.purchaseOrderItemId) {
+                  <tr [class.fully-received]="item.remainingQuantity === 0">
+                    <td class="center-cell">{{ item.orderedQuantity }}</td>
+                    <td>
+                      <div class="item-title">{{ item.bookTitle }}</div>
+                      <div class="item-sub">{{ item.edition }}</div>
+                    </td>
+                    <td>{{ item.unitCost ? '৳ ' + item.unitCost : '—' }}</td>
+                    <td class="font-bold">৳ {{ ((item.unitCost || 0) * item.orderedQuantity).toFixed(2) }}</td>
+                    <td class="center-cell"><span class="rcv-badge">{{ item.receivedQuantity }}</span></td>
+                    <td class="center-cell">
+                      @if (item.remainingQuantity === 0) { <span class="done-badge">✓ Done</span> }
+                      @else { <span class="rem-badge">{{ item.remainingQuantity }}</span> }
+                    </td>
+                  </tr>
+                }
+              </tbody>
+              <tfoot>
+                <tr>
+                  <td colspan="3" class="total-label">ORDER TOTAL</td>
+                  <td class="grand-total">৳ {{ orderTotal.toFixed(2) }}</td>
+                  <td colspan="2"></td>
+                </tr>
+                @if ((order.additionalCharge || 0) > 0) {
+                  <tr>
+                    <td colspan="3" class="total-label">ADDITIONAL CHARGES</td>
+                    <td class="grand-total" style="font-size:14px; color:#92400e;">৳ {{ (order.additionalCharge || 0).toFixed(2) }}</td>
+                    <td colspan="2"></td>
+                  </tr>
+                }
+                @if ((order.additionalCharge || 0) > 0) {
+                  <tr class="grand-total-row">
+                    <td colspan="3" class="total-label" style="color:#1d4ed8; font-size:11px;">GRAND TOTAL</td>
+                    <td style="font-size:18px; font-weight:800; color:#1d4ed8; padding:11px 12px; border-top: 2px solid #e2e8f0;">৳ {{ grandTotal.toFixed(2) }}</td>
+                    <td colspan="2"></td>
+                  </tr>
+                }
+              </tfoot>
+            </table>
+          </div>
+
+          @if (!receiveMode) {
+            <div class="po-actions">
+              @if (order.status === 'PendingApproval') {
+                <button (click)="approve()" [disabled]="submitting" class="btn-approve">
+                  {{ submitting ? '...' : ' Approve Order' }}
+                </button>
+                <button (click)="cancel()" [disabled]="submitting" class="btn-cancel-order">❌ Cancel Order</button>
+              }
+              @if (order.status === 'Approved' || order.status === 'PartiallyReceived') {
+                <button (click)="startReceive()" class="btn-receive">Receive Books</button>
+              }
+            </div>
+          }
+
+        </div>
+
+        @if (receiveMode) {
+          <div class="receive-panel">
+            <div class="receive-header">
+              <h3>Receive Books into Library</h3>
+              <p>Specify quantities received and assign each batch to a shelf location.</p>
+            </div>
+
+            <div class="form-group" style="max-width:250px;margin-bottom:20px">
+              <label>Receive Date <span class="required">*</span></label>
+              <input type="date" [(ngModel)]="receiveDate" [min]="order.orderDate" />
+            </div>
+
+            <div class="receive-table-wrap">
+              <table class="receive-table">
+                <thead>
+                  <tr>
+                    <th>BOOK EDITION</th>
+                    <th>PENDING</th>
+                    <th>QTY RECEIVING</th>
+                    <th>SHELF <span class="required">*</span></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (line of receiveLines; track line.purchaseOrderItemId) {
+                    <tr>
+                      <td>
+                        <div class="item-title">{{ line.bookTitle }}</div>
+                        <div class="item-sub">{{ line.edition }}</div>
+                      </td>
+                      <td class="center-cell"><span class="rem-badge">{{ line.remaining }}</span></td>
+                      <td class="center-cell">
+                        <input type="number" [(ngModel)]="line.quantity" min="1" [max]="line.remaining" class="qty-input" />
+                      </td>
+                      <td>
+                        <select [(ngModel)]="line.shelfId" class="shelf-select">
+                          <option [value]="null">— Select Shelf —</option>
+                          @for (shelf of shelves; track shelf.shelfId) {
+                            <option [value]="shelf.shelfId">
+                              {{ shelf.shelfCode }} — {{ shelf.floorCode }}/{{ shelf.sectionCode }} (Cap: {{ shelf.maxCapacity }})
+                            </option>
+                          }
+                        </select>
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+
+            <div class="receive-actions">
+              <button (click)="submitReceive()" [disabled]="submitting" class="btn-submit-receive">
+                {{ submitting ? ' Processing...' : ' Confirm Receipt' }}
+              </button>
+              <button (click)="cancelReceive()" [disabled]="submitting" class="btn-cancel-receive">Cancel</button>
+            </div>
+          </div>
+        }
+
+      </div>
+
+      <!-- Sidebar -->
+      <div class="po-sidebar">
+        <div class="summary-card">
+          <div class="summary-title">📊 Summary</div>
+          <div class="summary-row"><span>Status</span>
+            <span class="status-badge {{ statusClass(order.status) }}">{{ statusIcon(order.status) }} {{ order.status }}</span>
+          </div>
+          <div class="summary-divider"></div>
+          <div class="summary-row"><span>Line Items</span><strong>{{ order.items?.length }}</strong></div>
+          <div class="summary-row"><span>Total Ordered</span><strong>{{ getTotalOrdered() }}</strong></div>
+          <div class="summary-row"><span>Total Received</span><strong>{{ getTotalReceived() }}</strong></div>
+          <div class="summary-row"><span>Remaining</span><strong>{{ getTotalRemaining() }}</strong></div>
+          <div class="summary-divider"></div>
+          <div class="summary-row"><span>Order Total</span><strong>৳ {{ orderTotal.toFixed(2) }}</strong></div>
+          @if ((order.additionalCharge || 0) > 0) {
+            <div class="summary-row"><span>Additional Charges</span><strong style="color:#92400e;">৳ {{ (order.additionalCharge || 0).toFixed(2) }}</strong></div>
+          }
+          <div class="summary-divider"></div>
+          <div class="summary-row grand"><span>Grand Total</span><strong style="color:#1d4ed8;">৳ {{ grandTotal.toFixed(2) }}</strong></div>
+        </div>
+
+        <div class="summary-card">
+          <div class="summary-title">📚 Items</div>
+          @for (item of order.items; track item.purchaseOrderItemId) {
+            <div class="preview-item">
+              <div class="preview-title">{{ item.bookTitle }}</div>
+              <div class="preview-meta">{{ item.edition }} &nbsp;·&nbsp; Qty: {{ item.orderedQuantity }}</div>
+              <div class="preview-progress">
+                <div class="progress-bar">
+                  <div class="progress-fill" [style.width.%]="(item.receivedQuantity / item.orderedQuantity) * 100"></div>
+                </div>
+                <span class="progress-label">{{ item.receivedQuantity }}/{{ item.orderedQuantity }}</span>
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+
+    </div>
+  }
+</div>

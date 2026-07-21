@@ -1,0 +1,405 @@
+<div class="report-wrapper">
+
+  <!-- ── Screen Toolbar ── -->
+  <div class="toolbar no-print">
+    <div class="toolbar-left">
+      <button class="btn btn-secondary" (click)="back()">
+        <span>←</span> Back to Reports
+      </button>
+      @if (grn) {
+        <div class="toolbar-title">
+          <span class="title-label">Goods Received Note</span>
+          <span class="title-number">{{ grnNumber }}</span>
+        </div>
+      }
+    </div>
+    <div class="toolbar-right">
+      <button class="btn btn-primary" (click)="print()">
+        <span>🖨️</span> Print / Save PDF
+      </button>
+    </div>
+  </div>
+
+  <!-- ── Alerts ── -->
+  @if (error) {
+    <div class="alert alert-error no-print"><span>⚠️</span> {{ error }}</div>
+  }
+  @if (loading) {
+    <div class="alert alert-info no-print"><span>⏳</span> Loading GRN Report…</div>
+  }
+
+  @if (!loading && grn) {
+
+    <!-- ── Filter / View Controls — same layout as PO ── -->
+    <div class="filter-section no-print">
+      <div class="filter-left">
+        <!-- Search field select + search box inline -->
+        <div class="search-inline-group">
+          <select [(ngModel)]="itemSearchType" (ngModelChange)="updateFilteredItems()" class="search-type-select">
+            @for (opt of itemSearchOptions; track opt.value) {
+              <option [value]="opt.value">{{ opt.label }}</option>
+            }
+          </select>
+          <label class="search-box">
+            <span class="search-icon">🔍</span>
+            <input
+              type="text"
+              placeholder="Filter items…"
+              [value]="searchQuery"
+              (input)="onSearchChange($any($event.target).value)"
+              class="search-input"
+            />
+            @if (searchQuery) {
+              <span class="search-count">{{ filteredItems.length }}</span>
+            }
+          </label>
+        </div>
+      </div>
+      <div class="filter-right">
+        <div class="view-toggle">
+          <button [class.active]="viewMode === 'detail'"  (click)="setViewMode('detail')"  class="view-btn">📄 Detail</button>
+          <button [class.active]="viewMode === 'preview'" (click)="setViewMode('preview')" class="view-btn">👁️ Preview</button>
+          <button [class.active]="viewMode === 'list'"    (click)="setViewMode('list')"    class="view-btn">📋 List</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════
+         REPORT PAGE  —  this div is what gets printed
+         ══════════════════════════════════════════════ -->
+    <div class="report-page">
+
+      <!-- Document Header -->
+      <div class="report-header">
+        <div class="header-left">
+          <div class="org-logo">📚</div>
+          <div class="org-info">
+            <div class="org-name">Library Management System</div>
+            <div class="org-dept">Procurement &amp; Inventory Department</div>
+            <div class="org-tagline">Official Goods Receipt Document</div>
+          </div>
+        </div>
+        <div class="header-right">
+          <div class="doc-type">GOODS RECEIVED NOTE</div>
+          <div class="doc-number">{{ grnNumber }}</div>
+          <div class="doc-date">
+            {{ grn.receivedDate ? (grn.receivedDate | date:'mediumDate') : (today | date:'mediumDate') }}
+          </div>
+        </div>
+      </div>
+
+      <div class="header-divider"></div>
+
+      <!-- Info Cards — compact row -->
+      <div class="info-cards">
+        <div class="info-card">
+          <span class="card-label">Received By</span>
+          <span class="card-value">{{ grn.receivedBy || '—' }}</span>
+        </div>
+        <div class="info-card">
+          <span class="card-label">PO Reference</span>
+          <span class="card-value">{{ purchaseOrderNumber }}</span>
+        </div>
+        <div class="info-card">
+          <span class="card-label">Received Date</span>
+          <span class="card-value">{{ grn.receivedDate ? (grn.receivedDate | date:'dd MMM yyyy') : '—' }}</span>
+        </div>
+        <div class="info-card">
+          <span class="card-label">Vehicle No.</span>
+          <span class="card-value">{{ grn.vehicleNumber || '—' }}</span>
+        </div>
+        <div class="info-card">
+          <span class="card-label">Delivery Person</span>
+          <span class="card-value">{{ grn.deliveryPersonName || '—' }}</span>
+        </div>
+        <!-- Total qty as info chip top-right, mirrors additional cost chip in PO -->
+        <div class="info-card info-card-cost">
+          <span class="card-label">Total Received</span>
+          <span class="card-value cost-chip">{{ totalQuantity }} copies</span>
+        </div>
+      </div>
+
+      @if (grn.notes) {
+        <div class="notes-bar">
+          <span class="notes-label">📝 Notes:</span>
+          <span class="notes-text">{{ grn.notes }}</span>
+        </div>
+      }
+
+      <!-- ── DETAIL VIEW ── -->
+      @if (viewMode === 'detail') {
+        <div class="view-container">
+          <div class="section-header">
+            <h3>📦 Received Items</h3>
+            <span class="item-count">{{ filteredItems.length }} item(s)</span>
+          </div>
+
+          <div class="table-wrapper">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th class="col-number">#</th>
+                  <th>Book Title</th>
+                  <th>Edition</th>
+                  <th class="col-number">Qty Received</th>
+                  <th>Shelf</th>
+                  <th>PO Ref</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (item of filteredItems; track item.grnItemId; let idx = $index) {
+                  <tr [class.even-row]="idx % 2 === 0">
+                    <td class="col-number text-muted">{{ idx + 1 }}</td>
+                    <td class="font-semibold">{{ item.bookTitle || '—' }}</td>
+                    <td class="text-muted">{{ item.edition || '—' }}</td>
+                    <td class="col-number">
+                      <span class="badge badge-success">{{ item.quantity || 0 }}</span>
+                    </td>
+                    <td>{{ item.shelfCode || '—' }}</td>
+                    <td class="text-muted">{{ item.pO_Number || '—' }}</td>
+                  </tr>
+                }
+                @if (filteredItems.length === 0) {
+                  <tr>
+                    <td colspan="6">
+                      <div class="empty-state">
+                        <div class="empty-icon">📭</div>
+                        <div class="empty-text">No items match your search.</div>
+                      </div>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+              <tfoot>
+                <tr>
+                  <td colspan="3" class="text-right font-bold" style="padding-right:8px">TOTAL</td>
+                  <td class="col-number font-bold text-success">{{ totalQuantity }}</td>
+                  <td colspan="2" class="text-muted" style="font-size:11px">copies received</td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+
+          <!-- Grand Total block — mirrors PO layout -->
+          <div class="grand-total-block">
+            <div class="gt-row">
+              <span class="gt-label">Total Book Titles</span>
+              <span class="gt-value">{{ grn.items?.length || 0 }}</span>
+            </div>
+            <div class="gt-row">
+              <span class="gt-label">Total Copies Accepted</span>
+              <span class="gt-value">{{ totalAccepted }}</span>
+            </div>
+            <div class="gt-row gt-final">
+              <span class="gt-label">Grand Total Received</span>
+              <span class="gt-value">{{ totalQuantity }} copies</span>
+            </div>
+          </div>
+
+          <!-- Compact stats strip -->
+          <div class="stats-strip">
+            <div class="strip-item">
+              <span class="strip-val text-info">{{ grn.items?.length || 0 }}</span>
+              <span class="strip-lbl">Titles</span>
+            </div>
+            <div class="strip-sep">|</div>
+            <div class="strip-item">
+              <span class="strip-val text-success">{{ totalAccepted }}</span>
+              <span class="strip-lbl">Accepted</span>
+            </div>
+            <div class="strip-sep">|</div>
+            <div class="strip-item">
+              <span class="strip-val text-danger">{{ totalRejected }}</span>
+              <span class="strip-lbl">Rejected</span>
+            </div>
+            <div class="strip-sep">|</div>
+            <div class="strip-item">
+              <span class="strip-val" [class.text-success]="acceptanceRate === 100" [class.text-danger]="acceptanceRate < 80">
+                {{ acceptanceRate | number:'1.1-1' }}%
+              </span>
+              <span class="strip-lbl">Acceptance</span>
+            </div>
+          </div>
+        </div>
+      }
+
+      <!-- ── PREVIEW VIEW ── -->
+      @if (viewMode === 'preview') {
+        <div class="view-container">
+          <div class="section-header">
+            <h3>👁️ GRN Summary</h3>
+          </div>
+
+          <div class="preview-grid">
+            <div class="preview-card">
+              <div class="preview-icon">📦</div>
+              <div class="stat-number">{{ grn.items?.length || 0 }}</div>
+              <div class="stat-text">Book Titles</div>
+            </div>
+            <div class="preview-card">
+              <div class="preview-icon">✅</div>
+              <div class="stat-number">{{ totalQuantity }}</div>
+              <div class="stat-text">Copies Received</div>
+            </div>
+            <div class="preview-card">
+              <div class="preview-icon">📊</div>
+              <div class="stat-number">{{ acceptanceRate | number:'1.1-1' }}%</div>
+              <div class="stat-text">Acceptance Rate</div>
+            </div>
+            <div class="preview-card preview-card-total">
+              <div class="preview-icon">🏷️</div>
+              <div class="stat-number" style="font-size:14px">{{ purchaseOrderNumber }}</div>
+              <div class="stat-text">Purchase Order</div>
+            </div>
+          </div>
+
+          <div class="progress-section">
+            <div class="progress-label">
+              <span>Goods Acceptance Rate</span>
+              <span class="progress-value">{{ acceptanceRate | number:'1.1-1' }}%</span>
+            </div>
+            <div class="progress-bar">
+              <div class="progress-fill" [style.width.%]="acceptanceRate"></div>
+            </div>
+            <div class="progress-info">
+              <strong>{{ totalAccepted }}</strong> accepted of
+              <strong>{{ totalQuantity }}</strong> received
+              @if (totalRejected > 0) {
+                · <strong class="text-danger">{{ totalRejected }}</strong> rejected
+              }
+            </div>
+          </div>
+
+          <!-- Grand Total block (GRN version) -->
+          <div class="grand-total-block" style="margin-top:16px">
+            <div class="gt-row">
+              <span class="gt-label">Total Book Titles</span>
+              <span class="gt-value">{{ grn.items?.length || 0 }}</span>
+            </div>
+            <div class="gt-row">
+              <span class="gt-label">Total Copies Accepted</span>
+              <span class="gt-value">{{ totalAccepted }}</span>
+            </div>
+            <div class="gt-row gt-final">
+              <span class="gt-label">Grand Total Received</span>
+              <span class="gt-value">{{ totalQuantity }} copies</span>
+            </div>
+          </div>
+
+          <!-- Items by shelf -->
+          <div class="section-header" style="margin-top:16px">
+            <h3>📍 Items by Shelf</h3>
+          </div>
+          <div class="list-container">
+            @for (item of grn.items; track item.grnItemId) {
+              <div class="list-item" style="padding:8px 14px">
+                <div class="list-item-meta">
+                  <span class="meta-item">
+                    <span class="meta-label">📚</span>
+                    <span class="meta-value">{{ item.bookTitle || '—' }}</span>
+                  </span>
+                  <span class="meta-item">
+                    <span class="meta-label">Qty:</span>
+                    <span class="meta-value text-success font-bold">{{ item.quantity }}</span>
+                  </span>
+                  <span class="meta-item">
+                    <span class="meta-label">Shelf:</span>
+                    <span class="meta-value">{{ item.shelfCode || '—' }}</span>
+                  </span>
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+      }
+
+      <!-- ── LIST VIEW ── -->
+      @if (viewMode === 'list') {
+        <div class="view-container">
+          <div class="section-header">
+            <h3>📋 Item List</h3>
+            <span class="item-count">{{ filteredItems.length }} item(s)</span>
+          </div>
+          <div class="list-container">
+            @for (item of filteredItems; track item.grnItemId) {
+              <div class="list-item">
+                <div class="list-item-header">
+                  <div class="list-item-title">{{ item.bookTitle || '—' }}</div>
+                  <span class="badge badge-info">{{ item.edition || 'N/A' }}</span>
+                </div>
+                <div class="list-item-meta">
+                  <span class="meta-item"><span class="meta-label">Qty:</span><span class="meta-value text-success">{{ item.quantity || 0 }}</span></span>
+                  <span class="meta-item"><span class="meta-label">Shelf:</span><span class="meta-value">{{ item.shelfCode || '—' }}</span></span>
+                  <span class="meta-item"><span class="meta-label">PO Ref:</span><span class="meta-value">{{ item.pO_Number || '—' }}</span></span>
+                </div>
+              </div>
+            }
+            @if (filteredItems.length === 0) {
+              <div class="empty-state">
+                <div class="empty-icon">📭</div>
+                <div class="empty-text">No items found matching your search.</div>
+              </div>
+            }
+          </div>
+
+          <!-- Grand Total block -->
+          <div class="grand-total-block" style="margin-top:16px">
+            <div class="gt-row">
+              <span class="gt-label">Total Book Titles</span>
+              <span class="gt-value">{{ grn.items?.length || 0 }}</span>
+            </div>
+            <div class="gt-row gt-final">
+              <span class="gt-label">Grand Total Received</span>
+              <span class="gt-value">{{ totalQuantity }} copies</span>
+            </div>
+          </div>
+        </div>
+      }
+
+      <div class="page-divider"></div>
+
+      <!-- Signatures -->
+      <div class="signatures-section">
+        <div class="sig-block">
+          <div class="sig-line"></div>
+          <div class="sig-label">Received By</div>
+          <div class="sig-sublabel">{{ grn.receivedBy || '_______________' }}</div>
+        </div>
+        <div class="sig-block">
+          <div class="sig-line"></div>
+          <div class="sig-label">Verified By</div>
+        </div>
+        <div class="sig-block">
+          <div class="sig-line"></div>
+          <div class="sig-label">Delivery Person</div>
+          <div class="sig-sublabel">{{ grn.deliveryPersonName || '_______________' }}</div>
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <div class="report-footer">
+        <div class="footer-left">
+          <div class="footer-text">Library Management System</div>
+          <div class="footer-subtext">Procurement &amp; Inventory · Generated {{ today | date:'medium' }}</div>
+        </div>
+        <div class="footer-center">
+          <div class="footer-number">{{ grnNumber }}</div>
+          <div class="footer-subtext">Document Reference</div>
+        </div>
+        <div class="footer-right">
+          <div class="footer-text">Goods Received Note</div>
+          <div class="footer-subtext">Page 1 of 1 · Confidential</div>
+        </div>
+      </div>
+
+    </div><!-- /report-page -->
+
+    <!-- req #4: Save / Cancel buttons — bottom right, screen only -->
+    <div class="action-bar no-print">
+      <button class="btn btn-secondary" (click)="back()">✕ Cancel</button>
+      <button class="btn btn-primary" (click)="print()">🖨️ Save PDF</button>
+    </div>
+
+  }
+
+</div><!-- /report-wrapper -->

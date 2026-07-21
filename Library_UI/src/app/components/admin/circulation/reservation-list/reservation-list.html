@@ -1,0 +1,79 @@
+<div class="container">
+  <div class="header">
+    <h2>📌 Reservations</h2>
+    <button (click)="newReservation()" class="btn-add">+ New Reservation</button>
+  </div>
+
+  <!-- Summary Cards -->
+  <div class="summary-cards">
+    <div class="card card-pending">
+      <div class="card-count">{{ pendingCount }}</div>
+      <div class="card-label">Pending</div>
+    </div>
+    <div class="card card-fulfilled">
+      <div class="card-count">{{ fulfilledCount }}</div>
+      <div class="card-label">Fulfilled</div>
+    </div>
+    <div class="card card-cancelled">
+      <div class="card-count">{{ cancelledCount }}</div>
+      <div class="card-label">Cancelled</div>
+    </div>
+  </div>
+
+  <div class="toolbar">
+    <input type="text" [(ngModel)]="searchTerm" (input)="refresh()"
+      placeholder="🔍 Search member, book, edition..." class="search-input" />
+    <div class="status-tabs">
+      @for (s of statusOptions; track s) {
+        <button class="tab-btn" [class.active]="statusFilter === s"
+          (click)="statusFilter = s; refresh()">{{ s }}</button>
+      }
+    </div>
+  </div>
+
+  @if (error)          { <div class="alert-error">{{ error }}</div> }
+  @if (successMessage) { <div class="alert-success">{{ successMessage }}</div> }
+  @if (loading)        { <div class="alert-info">Loading...</div> }
+  @if (!loading && filtered.length === 0 && !error) {
+    <div class="alert-warning">No reservations found for the selected filter.</div>
+  }
+
+  @if (!loading && filtered.length > 0) {
+    <table>
+      <thead>
+        <tr>
+          <th class="sortable" (click)="sortBy('reservationId')"># {{ icon('reservationId') }}</th>
+          <th class="sortable" (click)="sortBy('memberName')">Member {{ icon('memberName') }}</th>
+          <th class="sortable" (click)="sortBy('bookTitle')">Book {{ icon('bookTitle') }}</th>
+          <th>Edition</th>
+          <th class="sortable" (click)="sortBy('reservationDate')">Reserved On {{ icon('reservationDate') }}</th>
+          <th>Fulfilled At</th>
+          <th class="sortable" (click)="sortBy('status')">Status {{ icon('status') }}</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (item of paged; track item.reservationId) {
+          <tr>
+            <td><strong>#{{ item.reservationId }}</strong></td>
+            <td>{{ item.memberName || '—' }}</td>
+            <td>{{ item.bookTitle || '—' }}</td>
+            <td>{{ item.edition || '—' }}</td>
+            <td>{{ item.reservationDate | date:'mediumDate' }}</td>
+            <td>{{ item.fulfilledAt ? (item.fulfilledAt | date:'mediumDate') : '—' }}</td>
+            <td><span [class]="getStatusBadgeClass(item.status)">{{ item.status }}</span></td>
+            <td class="actions">
+              <button (click)="viewDetail(item)" class="btn-details">Details</button>
+              @if (item.status === 'Pending') {
+                <button (click)="cancel(item)" class="btn-cancel-res">✕ Cancel</button>
+              }
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+    <app-pagination [currentPage]="currentPage" [totalItems]="filtered.length" [pageSize]="pageSize"
+      (pageChanged)="onPageChanged($event)" (pageSizeChanged)="onPageSizeChanged($event)">
+    </app-pagination>
+  }
+</div>

@@ -1,0 +1,73 @@
+<div class="container">
+  <div class="header">
+    <h2>{{ viewOnly ? ' View Fine Rule' : (ruleId ? ' Edit Fine Rule' : ' Add Fine Rule') }}</h2>
+  </div>
+
+  @if (error) { <div class="alert-error">{{ error }}</div> }
+  @if (success) { <div class="alert-success"> {{ success }}</div> }
+  @if (loading) { <div class="alert-info"> Loading...</div> }
+
+  @if (!loading) {
+    <div class="form-box">
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Rule Name <span class="required">*</span></label>
+          <input type="text" [(ngModel)]="rule.ruleName" placeholder="e.g. Late Return, Lost Book" />
+        </div>
+        <div class="form-group">
+          <label>Fine Type <span class="required">*</span></label>
+          <select [(ngModel)]="rule.fineType">
+            @for (t of fineTypes; track t) { <option [value]="t">{{ t }}</option> }
+          </select>
+        </div>
+      </div>
+
+      <div class="section-title">💵 Fine Amount</div>
+
+      @if (rule.fineType === 'Fixed') {
+        <div class="form-group">
+          <label>Fixed Fine Amount (৳)</label>
+          <input type="number" [(ngModel)]="rule.fineAmount" placeholder="0.00" />
+        </div>
+      }
+      @if (rule.fineType === 'PerDay') {
+        <div class="form-group">
+          <label>Fine Per Day (৳)</label>
+          <input type="number" [(ngModel)]="rule.finePerDay" placeholder="0.00" />
+        </div>
+      }
+      @if (rule.fineType === 'Percentage') {
+        <div class="form-group">
+          <label>Percentage of Book Price (%)</label>
+          <input type="number" [(ngModel)]="rule.percentageOfBookPrice" placeholder="e.g. 10" min="1" max="100" />
+        </div>
+      }
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Max Fine Cap (৳) <span class="optional">(optional)</span></label>
+          <input type="number" [(ngModel)]="rule.maxFineAmount" placeholder="0.00" />
+        </div>
+        <div class="form-group">
+          <label>Grace Period (Days)</label>
+          <input type="number" [(ngModel)]="rule.gracePeriodDays" placeholder="0" min="0" />
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="checkbox-label">
+          <input type="checkbox" [(ngModel)]="rule.isActive" />
+          <span>Active</span>
+        </label>
+      </div>
+
+      <div class="form-actions">
+        <button (click)="submit()" [disabled]="submitting" class="btn-save">
+          {{ submitting ? 'Saving...' : (ruleId ? 'Update Rule' : 'Create Rule') }}
+        </button>
+        <button (click)="cancel()" [disabled]="submitting" class="btn-cancel">Cancel</button>
+      </div>
+    </div>
+  }
+</div>

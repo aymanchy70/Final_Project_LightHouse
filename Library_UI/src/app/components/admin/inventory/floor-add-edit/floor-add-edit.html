@@ -1,0 +1,63 @@
+<div class="container">
+  <div class="header">
+    <h2>{{ viewOnly ? ' View Floor' : (floorId ? ' Edit Floor' : ' Add Floor') }}</h2>
+  </div>
+
+  @if (error) {
+    <div class="alert-error">{{ error }}</div>
+  }
+  @if (success) {
+    <div class="alert-success"> {{ success }}</div>
+  }
+  @if (loading) {
+    <div class="alert-info"> Loading...</div>
+  }
+
+  @if (!loading) {
+    <div class="form-box">
+      <div class="form-group">
+        <label>Floor Code <span class="required">*</span></label>
+        <input
+          type="text"
+          [(ngModel)]="floor.floorCode"
+          placeholder="e.g., F1, GF, F2"
+          maxlength="10"
+          [disabled]="viewOnly"
+        />
+        <small class="helper-text">Unique identifier for the floor (e.g., F1, GF, F2)</small>
+      </div>
+
+      <div class="form-group">
+        <label>Floor Name <span class="required">*</span></label>
+        <input
+          type="text"
+          [(ngModel)]="floor.floorName"
+          placeholder="e.g., Ground Floor, First Floor"
+          maxlength="100"
+          [disabled]="viewOnly"
+        />
+      </div>
+
+      <div class="form-group">
+        <label>Description <span class="optional">(optional)</span></label>
+        <textarea
+          [(ngModel)]="floor.description"
+          placeholder="Additional details about this floor"
+          rows="3"
+          [disabled]="viewOnly"
+        ></textarea>
+      </div>
+
+      <div class="form-actions">
+        @if (!viewOnly) {
+          <button (click)="submit()" [disabled]="submitting" class="btn-save">
+            {{ submitting ? 'Saving...' : (floorId ? 'Update Floor' : 'Create Floor') }}
+          </button>
+        }
+        <button (click)="cancel()" [disabled]="submitting" class="btn-cancel">
+          {{ viewOnly ? 'Back' : 'Cancel' }}
+        </button>
+      </div>
+    </div>
+  }
+</div>

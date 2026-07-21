@@ -1,0 +1,159 @@
+<div class="container">
+  <div class="header">
+    <h2>{{ viewOnly ? 'View Physical Copy' : (copyId ? 'Edit Physical Copy' : 'Register Physical Copy') }}</h2>
+  </div>
+
+  @if (error) { <div class="alert-error">{{ error }}</div> }
+  @if (success) { <div class="alert-success">{{ success }}</div> }
+  @if (loading) { <div class="alert-info">Loading...</div> }
+
+  @if (!loading) {
+    <div class="form-box">
+      <p class="section-title">Book &amp; Identification</p>
+
+      <div class="form-group">
+        <label>Book Edition <span class="required">*</span></label>
+        <select [(ngModel)]="copy.bookEditionId" [disabled]="viewOnly">
+          <option [ngValue]="null" disabled>Select edition</option>
+          @for (e of editions; track e.bookEditionId) {
+            <option [ngValue]="e.bookEditionId">{{ editionLabel(e) }}</option>
+          }
+        </select>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Base Library Code</label>
+          <input type="text" [(ngModel)]="copy.baseLibraryCode" placeholder="Auto from book if empty" [disabled]="viewOnly" />
+        </div>
+        <div class="form-group">
+          <label>Barcode</label>
+          <input type="text" [(ngModel)]="copy.barcode" (ngModelChange)="onBarcodeChange($event)" placeholder="Auto-generated if empty" [disabled]="viewOnly" />
+        </div>
+      </div>
+
+      @if (copy.barcode) {
+        <div class="form-group">
+          <label>Barcode Preview</label>
+          <canvas #barcodeCanvas id="barcode-canvas" style="border: 1px solid #ddd; padding: 10px; margin: 10px 0;"></canvas>
+          <p class="hint">Note: To enable barcode rendering, install bwip-js: npm install bwip-js</p>
+        </div>
+      }
+
+      <p class="section-title">Location (optional)</p>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Floor</label>
+          <select [(ngModel)]="selectedFloorId" (ngModelChange)="onFloorChange()" [disabled]="viewOnly">
+            <option [ngValue]="null">— Select floor —</option>
+            @for (f of floors; track f.floorId) {
+              <option [ngValue]="f.floorId">{{ f.floorName || f.floorCode }}</option>
+            }
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Section</label>
+          <select [(ngModel)]="selectedSectionId" (ngModelChange)="onSectionChange()" [disabled]="viewOnly">
+            <option [ngValue]="null">— Select section —</option>
+            @for (s of filteredSections; track s.sectionId) {
+              <option [ngValue]="s.sectionId">{{ s.sectionCode }} — {{ s.sectionName }}</option>
+            }
+          </select>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Rack</label>
+          <select [(ngModel)]="selectedRackId" (ngModelChange)="onRackChange()" [disabled]="viewOnly">
+            <option [ngValue]="null">— Select rack —</option>
+            @for (r of filteredRacks; track r.rackId) {
+              <option [ngValue]="r.rackId">{{ r.rackCode }} — {{ r.rackName }}</option>
+            }
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Shelf</label>
+          <select [(ngModel)]="copy.shelfId" [disabled]="viewOnly">
+            <option [ngValue]="null">Unshelved</option>
+            @for (sh of filteredShelves; track sh.shelfId) {
+              <option [ngValue]="sh.shelfId">{{ sh.shelfCode }}</option>
+            }
+          </select>
+        </div>
+      </div>
+
+      <p class="section-title">Status &amp; Acquisition</p>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Status</label>
+          <select [(ngModel)]="copy.status" [disabled]="viewOnly">
+            @for (st of statusOptions; track st) {
+              <option [value]="st">{{ st }}</option>
+            }
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Condition</label>
+          <select [(ngModel)]="copy.currentCondition" [disabled]="viewOnly">
+            @for (c of conditionOptions; track c) {
+              <option [value]="c">{{ c }}</option>
+            }
+          </select>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Acquired Date</label>
+          <input type="date" [(ngModel)]="copy.acquiredDate" [disabled]="viewOnly" />
+        </div>
+        <div class="form-group">
+          <label>Acquired Cost</label>
+          <input type="number" [(ngModel)]="copy.acquiredCost" min="0" step="0.01" [disabled]="viewOnly" />
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Supplier</label>
+          <select [(ngModel)]="copy.supplierId" [disabled]="viewOnly">
+            <option [ngValue]="null">— None —</option>
+            @for (sup of suppliers; track sup.supplierId) {
+              <option [ngValue]="sup.supplierId">{{ sup.name }}</option>
+            }
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Purchase Invoice</label>
+          <input type="text" [(ngModel)]="copy.purchaseInvoice" [disabled]="viewOnly" />
+        </div>
+      </div>
+
+      <div class="form-group checkbox-row">
+        <label>
+          <input type="checkbox" [(ngModel)]="copy.isReference" [disabled]="viewOnly" />
+          Reference copy (cannot leave library)
+        </label>
+      </div>
+
+      <div class="form-group">
+        <label>Notes</label>
+        <textarea [(ngModel)]="copy.notes" rows="3" [disabled]="viewOnly"></textarea>
+      </div>
+
+      @if (!viewOnly) {
+        <div class="form-actions">
+          <button (click)="submit()" [disabled]="submitting" class="btn-save">
+            {{ submitting ? 'Saving...' : (copyId ? 'Update Copy' : 'Register Copy') }}
+          </button>
+          <button (click)="cancel()" [disabled]="submitting" class="btn-cancel">Cancel</button>
+        </div>
+      } @else {
+        <div class="form-actions">
+          <button (click)="cancel()" class="btn-cancel">Back to List</button>
+        </div>
+      }
+    </div>
+  }
+</div>

@@ -1,0 +1,227 @@
+<div class="container">
+  <div class="header">
+    <h2>{{ bookId ? '✏️ Edit Book' : '➕ Add Book' }}</h2>
+  </div>
+
+  @if (error) { <div class="alert-error"><span class="alert-icon">⚠️</span>{{ error }}</div> }
+  @if (success) { <div class="alert-success"><span class="alert-icon">✅</span>{{ success }}</div> }
+  @if (loading) { <div class="alert-info"><span class="alert-icon">⏳</span>Loading...</div> }
+
+  @if (!loading) {
+    <div class="form-box">
+
+      <!-- ── Basic Info ── -->
+      <div class="section-title">📖 Basic Info</div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Title <span class="required">*</span></label>
+          <input type="text" [(ngModel)]="book.title" placeholder="Book title" />
+        </div>
+        <div class="form-group">
+          <label>Subtitle <span class="optional">(optional)</span></label>
+          <input type="text" [(ngModel)]="book.subtitle" placeholder="Subtitle" />
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Description</label>
+        <textarea [(ngModel)]="book.description" placeholder="Book description" rows="3"></textarea>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Master ISBN</label>
+          <input type="text" [(ngModel)]="book.masterISBN" placeholder="e.g. 9780141036144" maxlength="13" />
+        </div>
+        <div class="form-group">
+          <label>Language</label>
+          <select [(ngModel)]="book.language">
+            <option value="">— Select Language —</option>
+            <option value="Bengali">Bengali (বাংলা)</option>
+            <option value="English">English</option>
+            <option value="Arabic">Arabic (العربية)</option>
+            <option value="Hindi">Hindi (हिन्दी)</option>
+            <option value="Urdu">Urdu (اردو)</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Publication Year</label>
+          <input type="number" [(ngModel)]="book.publicationYear" placeholder="e.g. 2023" />
+        </div>
+        <div class="form-group">
+          <label>Page Count</label>
+          <input type="number" [(ngModel)]="book.pageCount" placeholder="e.g. 350" />
+        </div>
+      </div>
+
+      <!-- ── Cover Image ── -->
+      <div class="section-title">🖼️ Cover Image</div>
+      <div class="form-group">
+        <label>Cover Image <span class="optional">(optional)</span></label>
+        <div class="file-upload-zone" (click)="coverInput.click()" [class.has-file]="book.coverImageFile">
+          <input #coverInput type="file"
+            accept="image/png,image/jpeg,image/jpg,image/gif,image/webp,image/bmp,image/svg+xml,image/tiff,image/*"
+            (change)="onCoverImageFileSelected($event)"
+            class="file-input-hidden" />
+          @if (book.coverImageFile) {
+            <div class="file-upload-content">
+              <span class="file-upload-icon">🖼️</span>
+              <span class="file-upload-name">{{ book.coverImageFile.name }}</span>
+              <span class="file-upload-hint">Click to change</span>
+            </div>
+          } @else {
+            <div class="file-upload-content">
+              <span class="file-upload-icon">📷</span>
+              <span class="file-upload-label">Click to upload cover image</span>
+              <span class="file-upload-hint">PNG, JPG, WEBP, GIF supported</span>
+            </div>
+          }
+        </div>
+      </div>
+
+      <!-- ── PDF / Digital Copy ── -->
+      <div class="section-title">📄 Digital Copy (PDF)</div>
+      <div class="form-group">
+        <label>PDF File <span class="optional">(optional)</span></label>
+        <div class="file-upload-zone pdf-zone" (click)="pdfInput.click()" [class.has-file]="book.pdfFile">
+          <input #pdfInput type="file" accept="application/pdf"
+            (change)="onPdfFileSelected($event)"
+            class="file-input-hidden" />
+          @if (book.pdfFile) {
+            <div class="file-upload-content">
+              <span class="file-upload-icon">📄</span>
+              <span class="file-upload-name">{{ book.pdfFile.name }}</span>
+              <span class="file-upload-hint">Click to change · PDF only</span>
+            </div>
+          } @else {
+            <div class="file-upload-content">
+              <span class="file-upload-icon">📤</span>
+              <span class="file-upload-label">Click to choose a PDF file</span>
+              <span class="file-upload-hint">Only PDF files are accepted</span>
+            </div>
+          }
+        </div>
+        @if (pdfError) { <div class="field-error">{{ pdfError }}</div> }
+      </div>
+
+      <!-- ── Classification ── -->
+      <div class="section-title">🗂️ Classification</div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Category</label>
+          <select [(ngModel)]="book.itemCategoryId" (change)="onCategoryChange()">
+            <option [value]="null">— No Category —</option>
+            @for (cat of categories; track cat.itemCategoryId) {
+              <option [value]="cat.itemCategoryId">{{ cat.categoryName }}</option>
+            }
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Sub Category</label>
+          <select [(ngModel)]="book.subCategoryId">
+            <option [value]="null">— No Sub Category —</option>
+            @for (sub of filteredSubCategories; track sub.subCategoryId) {
+              <option [value]="sub.subCategoryId">{{ sub.name }}</option>
+            }
+          </select>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Publisher</label>
+        <select [(ngModel)]="book.publisherId">
+          <option [value]="null">— No Publisher —</option>
+          @for (pub of publishers; track pub.publisherId) {
+            <option [value]="pub.publisherId">{{ pub.name }}</option>
+          }
+        </select>
+      </div>
+
+      <!-- ── Library Codes ── -->
+      <div class="section-title">🏷️ Library Codes <span class="required">*</span></div>
+      <div class="field-hint">These codes are used to generate barcodes and call numbers for physical copies.</div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Base Library Code <span class="required">*</span></label>
+          <input type="text" [(ngModel)]="book.baseLibraryCode" placeholder="e.g. LIB, SCI, FIC"
+            style="text-transform:uppercase" maxlength="20" />
+          <small class="hint">Short code for this book. Used to auto-generate barcodes (e.g. LIB-001).</small>
+        </div>
+        <div class="form-group">
+          <label>DDC Number</label>
+          <input type="text" [(ngModel)]="book.ddcNumber" placeholder="e.g. 823.914" maxlength="30" />
+          <small class="hint">Dewey Decimal Classification number.</small>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Cutter Number</label>
+          <input type="text" [(ngModel)]="book.cutterNumber" placeholder="e.g. O73" maxlength="30" />
+          <small class="hint">Cutter author code. Combined with DDC → Call Number.</small>
+        </div>
+        <div class="form-group">
+          @if (book.ddcNumber || book.cutterNumber) {
+            <label>Computed Call Number</label>
+            <div class="call-number-preview">{{ book.ddcNumber || '' }} / {{ book.cutterNumber || '' }}</div>
+          }
+        </div>
+      </div>
+
+      <!-- ── Authors ── -->
+      <div class="section-title">✍️ Authors <span class="required">*</span></div>
+      <div class="field-hint">At least one author is required.</div>
+      <div class="form-group">
+        @if (authors.length === 0) {
+          <div class="alert-info"><span class="alert-icon">⏳</span>Loading authors...</div>
+        }
+        <div class="checkbox-grid">
+          @for (author of authors; track author.authorId) {
+            <label class="checkbox-item" [class.selected]="isAuthorSelected(author.authorId)">
+              <input type="checkbox" [checked]="isAuthorSelected(author.authorId)" (change)="toggleAuthor(author.authorId)" />
+              {{ author.fullName }}
+            </label>
+          }
+        </div>
+      </div>
+
+      <!-- ── Options ── -->
+      <div class="section-title">⚙️ Options</div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="checkbox-label">
+            <input type="checkbox" [(ngModel)]="book.isRareBook" />
+            Rare Book
+          </label>
+        </div>
+        <div class="form-group">
+          <label class="checkbox-label">
+            <input type="checkbox" [(ngModel)]="book.requiresSecurityDeposit" />
+            Requires Security Deposit
+          </label>
+        </div>
+      </div>
+
+      @if (book.requiresSecurityDeposit) {
+        <div class="form-group">
+          <label>Security Deposit Amount (৳)</label>
+          <input type="number" [(ngModel)]="book.securityDepositAmount" placeholder="0.00" />
+        </div>
+      }
+
+      <!-- ── Actions ── -->
+      <div class="form-actions">
+        <button (click)="submit()" [disabled]="submitting" class="btn-save">
+          {{ submitting ? '⏳ Saving...' : (bookId ? '💾 Update Book' : '✅ Create Book') }}
+        </button>
+        <button (click)="cancel()" [disabled]="submitting" class="btn-cancel">Cancel</button>
+      </div>
+
+    </div>
+  }
+</div>

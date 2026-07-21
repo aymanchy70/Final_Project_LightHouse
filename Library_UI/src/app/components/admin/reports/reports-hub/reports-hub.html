@@ -1,0 +1,136 @@
+<div class="reports-hub">
+  <div class="hub-header">
+    <h2>🖨️ Reports Center</h2>
+    <p>Search and open printable Purchase Order or GRN reports</p>
+  </div>
+
+  @if (error) { <div class="alert alert-error">⚠️ {{ error }}</div> }
+
+  <div class="filters-card">
+    <div class="filters-row">
+
+      <div class="filter-group">
+        <label>Report Type</label>
+        <select [(ngModel)]="reportKind" (ngModelChange)="onReportKindChange()">
+          <option value="po">Purchase Order (PO)</option>
+          <option value="grn">Goods Received Note (GRN)</option>
+        </select>
+      </div>
+
+      <div class="filter-group">
+        <label>Search By</label>
+        <select [(ngModel)]="searchField" (ngModelChange)="refresh()">
+          @for (f of searchFields; track f.value) {
+            <option [value]="f.value">{{ f.label }}</option>
+          }
+        </select>
+      </div>
+
+      <div class="filter-group filter-grow">
+        <label>Search</label>
+        <div class="search-wrap">
+          <span class="search-icon">🔍</span>
+          <input
+            type="text"
+            [(ngModel)]="searchQuery"
+            (input)="refresh()"
+            [placeholder]="reportKind === 'po'
+              ? 'Search PO number, supplier name, status…'
+              : 'Search GRN number, PO number, received by…'"
+          />
+        </div>
+      </div>
+
+      @if (reportKind === 'po') {
+        <div class="filter-group">
+          <label>Status Filter</label>
+          <select [(ngModel)]="statusFilter" (ngModelChange)="refresh()">
+            <option value="">All Statuses</option>
+            @for (s of poStatusOptions; track s) {
+              @if (s) { <option [value]="s">{{ statusLabel(s) }}</option> }
+            }
+          </select>
+        </div>
+      }
+
+    </div>
+
+    <p class="filter-hint">
+      @if (reportKind === 'po') {
+        💡 Search by PO Number to find a specific purchase order, or filter by status to narrow results.
+      } @else {
+        💡 Search by GRN Number to find a specific receipt, or by PO Number to find all GRNs for a purchase order.
+      }
+      &nbsp;·&nbsp; <strong>{{ filtered.length }}</strong> result(s) found
+    </p>
+  </div>
+
+  <!-- Loading -->
+  @if (loading) {
+    <div class="alert alert-info">⏳ Loading report data…</div>
+  }
+
+  @if (!loading) {
+    <div class="results-card">
+
+      @if (filtered.length === 0) {
+        <div class="empty-state">
+          <div class="empty-icon">📭</div>
+          <p>No {{ reportKind === 'po' ? 'purchase orders' : 'GRNs' }} match your filters.</p>
+          <p style="font-size:13px;color:#94a3b8">Try clearing the search or changing the filter.</p>
+        </div>
+
+      } @else {
+        <table class="results-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>{{ reportKind === 'po' ? 'PO Number' : 'GRN Number' }}</th>
+              <th>{{ reportKind === 'po' ? 'Supplier' : 'PO Ref / Received By' }}</th>
+              <th>Date</th>
+              @if (reportKind === 'po') {
+                <th>Status</th>
+              }
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (item of paged; track reportKind === 'po' ? item.purchaseOrderId : item.grnId; let idx = $index) {
+              <tr>
+                <!-- FIX: use correct ID fields (camelCase from .NET JSON) -->
+                <td class="row-num">{{ (currentPage - 1) * pageSize + idx + 1 }}</td>
+                <td><strong class="doc-ref">{{ displayNumber(item) }}</strong></td>
+                <td>{{ displaySubtitle(item) }}</td>
+                <td>
+                  {{ (reportKind === 'po' ? item.orderDate : item.receivedDate) | date:'dd MMM yyyy' }}
+                </td>
+                @if (reportKind === 'po') {
+                  <td>
+                    <!-- FIX: item.status is camelCase from API -->
+                    <span class="status-pill" [class]="'status-' + item.status?.toLowerCase()">
+                      {{ statusLabel(item.status) }}
+                    </span>
+                  </td>
+                }
+                <td>
+                  <button type="button" class="btn-open" (click)="openReport(item)">
+                    🖨️ Open Report
+                  </button>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+
+        <app-pagination
+          [currentPage]="currentPage"
+          [totalItems]="filtered.length"
+          [pageSize]="pageSize"
+          (pageChanged)="onPageChanged($event)"
+          (pageSizeChanged)="onPageSizeChanged($event)">
+        </app-pagination>
+      }
+
+    </div>
+  }
+</div>

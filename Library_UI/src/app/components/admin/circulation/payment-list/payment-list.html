@@ -1,0 +1,76 @@
+<div class="container">
+  <div class="header">
+    <h2>💳 Payments</h2>
+    <button (click)="addPayment()" class="btn-add">+ Record Payment</button>
+  </div>
+
+  <!-- Summary Cards -->
+  <div class="summary-cards">
+    <div class="card card-total">
+      <div class="card-count">৳{{ totalAll | number:'1.2-2' }}</div>
+      <div class="card-label">Total Collected</div>
+    </div>
+    <div class="card card-fine">
+      <div class="card-count">৳{{ totalFine | number:'1.2-2' }}</div>
+      <div class="card-label">Fine Payments</div>
+    </div>
+    <div class="card card-membership">
+      <div class="card-count">৳{{ totalMembership | number:'1.2-2' }}</div>
+      <div class="card-label">Membership Fees</div>
+    </div>
+  </div>
+
+  <div class="toolbar">
+    <input type="text" [(ngModel)]="searchTerm" (input)="refresh()"
+      placeholder="🔍 Search member, type, method..." class="search-input" />
+    <div class="type-tabs">
+      @for (t of typeOptions; track t) {
+        <button class="tab-btn" [class.active]="typeFilter === t"
+          (click)="typeFilter = t; refresh()">{{ t === 'MembershipFee' ? 'Membership Fee' : t }}</button>
+      }
+    </div>
+  </div>
+
+  @if (error)          { <div class="alert-error">{{ error }}</div> }
+  @if (successMessage) { <div class="alert-success">{{ successMessage }}</div> }
+  @if (loading)        { <div class="alert-info">Loading payments...</div> }
+  @if (!loading && filtered.length === 0 && !error) {
+    <div class="alert-warning">No payment records found.</div>
+  }
+
+  @if (!loading && filtered.length > 0) {
+    <table>
+      <thead>
+        <tr>
+          <th class="sortable" (click)="sortBy('paymentId')"># {{ icon('paymentId') }}</th>
+          <th class="sortable" (click)="sortBy('memberName')">Member {{ icon('memberName') }}</th>
+          <th class="sortable" (click)="sortBy('paymentType')">Type {{ icon('paymentType') }}</th>
+          <th class="sortable" (click)="sortBy('amount')">Amount {{ icon('amount') }}</th>
+          <th class="sortable" (click)="sortBy('paymentMethod')">Method {{ icon('paymentMethod') }}</th>
+          <th class="sortable" (click)="sortBy('paymentDate')">Date {{ icon('paymentDate') }}</th>
+          <th>Notes</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (item of paged; track item.paymentId) {
+          <tr>
+            <td><strong>#{{ item.paymentId }}</strong></td>
+            <td>{{ item.memberName || '—' }}</td>
+            <td><span [class]="getTypeBadgeClass(item.paymentType)">{{ item.paymentType === 'MembershipFee' ? 'Membership Fee' : item.paymentType }}</span></td>
+            <td><strong>৳{{ item.amount | number:'1.2-2' }}</strong></td>
+            <td>{{ item.paymentMethod }}</td>
+            <td>{{ item.paymentDate | date:'mediumDate' }}</td>
+            <td class="notes-cell">{{ item.notes || '—' }}</td>
+            <td class="actions">
+              <button (click)="viewDetail(item.paymentId)" class="btn-details">Details</button>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+    <app-pagination [currentPage]="currentPage" [totalItems]="filtered.length" [pageSize]="pageSize"
+      (pageChanged)="onPageChanged($event)" (pageSizeChanged)="onPageSizeChanged($event)">
+    </app-pagination>
+  }
+</div>

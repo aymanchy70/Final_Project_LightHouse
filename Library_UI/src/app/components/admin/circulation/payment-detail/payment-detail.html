@@ -1,0 +1,46 @@
+<div class="container">
+  <div class="page-header">
+    <button (click)="goBack()" class="btn-back">← Back to Payments</button>
+    <h2>💳 Payment Detail</h2>
+  </div>
+
+  @if (error)   { <div class="alert-error">{{ error }}</div> }
+  @if (loading) { <div class="alert-info">Loading...</div> }
+
+  @if (payment) {
+    <div class="detail-grid">
+
+      <div class="card">
+        <div class="card-header">
+          <h3>📄 Payment #{{ payment.paymentId }}</h3>
+          <span [class]="getTypeBadgeClass(payment.paymentType)">
+            {{ payment.paymentType === 'MembershipFee' ? 'Membership Fee' : payment.paymentType }}
+          </span>
+        </div>
+        <div class="card-body">
+          <div class="info-row">
+            <span class="label">Member</span>
+            <span class="value">{{ payment.memberName || '—' }} <small class="muted">(ID: {{ payment.memberId }})</small></span>
+          </div>
+          <div class="info-row">
+            <span class="label">Amount</span>
+            <span class="value amount-value">৳{{ payment.amount | number:'1.2-2' }}</span>
+          </div>
+          <div class="info-row">
+            <span class="label">Payment Method</span>
+            <span class="value">{{ payment.paymentMethod }}</span>
+          </div>
+          <div class="info-row">
+            <span class="label">Payment Date</span>
+            <span class="value">{{ payment.paymentDate | date:'medium' }}</span>
+          </div>
+          <div class="info-row">
+            <span class="label">Notes</span>
+            <span class="value notes-value">{{ payment.notes || 'No notes' }}</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  }
+</div>

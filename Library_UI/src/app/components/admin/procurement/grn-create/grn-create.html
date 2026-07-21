@@ -1,0 +1,344 @@
+<div class="po-page">
+  <!-- Top bar -->
+  <div class="po-topbar">
+    <div class="po-topbar-left">
+      <span class="po-topbar-title">New GRN (Goods Received Note)</span>
+      <span class="po-topbar-sub">Receive books against a Purchase Order</span>
+    </div>
+    <div class="po-topbar-actions">
+    </div>
+  </div>
+
+  @if (error)   { <div class="alert alert-error">{{ error }}</div> }
+  @if (success) { <div class="alert alert-success"> {{ success }}</div> }
+
+  <!-- Header -->
+  <div class="po-panel">
+    <div class="field-grid">
+      <div class="field-row">
+        <label class="field-label">GRN Number</label>
+        <span class="field-sep">:</span>
+        <div class="field-value readonly-val">Auto-Generated</div>
+      </div>
+
+      <div class="field-row">
+        <label class="field-label">Received Date <span class="req">*</span></label>
+        <span class="field-sep">:</span>
+        <div class="field-value">
+          <input type="date" [(ngModel)]="grn.receivedDate" class="f-input" />
+        </div>
+      </div>
+
+      <div class="field-row">
+        <label class="field-label">Received By</label>
+        <span class="field-sep">:</span>
+        <div class="field-value">
+          <input type="text" [(ngModel)]="grn.receivedBy" placeholder="Name of receiver..." class="f-input" />
+        </div>
+      </div>
+
+      <div class="field-row">
+        <label class="field-label">Vehicle Number</label>
+        <span class="field-sep">:</span>
+        <div class="field-value">
+          <input type="text" [(ngModel)]="grn.vehicleNumber" placeholder="e.g. Dhaka Metro-GA 1234" class="f-input" />
+        </div>
+      </div>
+
+      <div class="field-row">
+        <label class="field-label">Delivery Person</label>
+        <span class="field-sep">:</span>
+        <div class="field-value">
+          <input type="text" [(ngModel)]="grn.deliveryPersonName" placeholder="Delivery person name..." class="f-input" />
+        </div>
+      </div>
+
+      <div class="field-row">
+        <label class="field-label">Notes</label>
+        <span class="field-sep">:</span>
+        <div class="field-value">
+          <input type="text" [(ngModel)]="grn.notes" placeholder="Optional notes..." class="f-input" />
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PO Selection -->
+  <div class="po-panel" style="margin-top:14px">
+    <div class="section-bar">
+      <span class="section-title">📋 Select Purchase Order</span>
+    </div>
+    <div class="cascade-row">
+      <div class="cascade-item" style="flex:1">
+        <label class="cascade-label">Purchase Order <span class="req">*</span></label>
+
+        <div class="po-picker-row">
+          <!-- Quick-select dropdown -->
+          <select class="po-quick-select" (change)="onQuickPOSelect($event)">
+            <option value="">— Quick Select PO —</option>
+            @for (po of purchaseOrders; track po.purchaseOrderId) {
+              <option [value]="po.purchaseOrderId"
+                      [selected]="selectedPOId === po.purchaseOrderId">
+                {{ po.pO_Number || po.po_Number }} — {{ po.supplierName }}
+              </option>
+            }
+          </select>
+
+          <!-- Existing modal picker button -->
+          <button type="button" class="po-picker-btn" (click)="openPOModal()">
+            @if (selectedPO) {
+              <span class="po-picker-selected">
+                <span class="po-picker-badge">{{ selectedPO.pO_Number || selectedPO.po_Number }}</span>
+                <span class="po-picker-supplier">{{ selectedPO.supplierName }}</span>
+              </span>
+            } @else {
+              <span class="po-picker-placeholder">— or browse &amp; preview POs —</span>
+            }
+            <span class="po-picker-chevron">{{ selectedPO ? '✎' : '▼' }}</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Selected PO Info strip -->
+    @if (selectedPO) {
+      <div class="supplier-strip">
+        <span class="sup-name">📋 {{ selectedPO.pO_Number || selectedPO.po_Number }}</span>
+        <span>🏭 {{ selectedPO.supplierName }}</span>
+        <span>📅 Ordered: {{ selectedPO.orderDate | date:'mediumDate' }}</span>
+        <span>Expected: {{ selectedPO.receiveDate | date:'mediumDate' }}</span>
+        <span class="status-chip status-{{ (selectedPO.status || '') | lowercase }}">{{ selectedPO.status }}</span>
+      </div>
+    }
+  </div>
+
+  <!-- Items Table -->
+  @if (pendingItems.length > 0) {
+    <div class="po-panel" style="margin-top:14px">
+      <div class="section-bar">
+        <span class="section-title">Line Items to Receive &amp; Locate</span>
+        <span class="row-count-hint">{{ pendingItems.length }} item(s)</span>
+      </div>
+      <div class="grid-wrap">
+        <table class="data-grid">
+          <thead>
+            <tr class="grid-head">
+              <th>PO</th>
+              <th>Book Title</th>
+              <th>Edition</th>
+              <th>Ordered</th>
+              <th>Already Recv</th>
+              <th>Remaining</th>
+              <th>Qty to Receive</th>
+              <th>Shelf (Location)</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (item of pendingItems; track item.purchaseOrderItemId; let i = $index) {
+              <tr class="grid-row">
+                <td>{{ item.poNumber }}</td>
+                <td>
+                  <div class="cell-title">{{ item.bookTitle }}</div>
+                </td>
+                <td>{{ item.edition }}</td>
+                <td class="center">{{ item.orderedQty }}</td>
+                <td class="center">{{ item.alreadyReceived }}</td>
+                <td class="center">
+                  <span class="rem-badge">{{ item.remaining }}</span>
+                </td>
+                <td>
+                  <input
+                    type="number"
+                    [(ngModel)]="item.receiveQty"
+                    min="0"
+                    [max]="item.remaining"
+                    class="grid-input qty-input"
+                  />
+                </td>
+                <td>
+                  <select [(ngModel)]="item.shelfId" class="f-select">
+                    <option [value]="null">— Select Shelf —</option>
+                    @for (shelf of filteredShelves; track shelf.shelfId) {
+                      <option [value]="shelf.shelfId">
+                        {{ shelf.shelfCode }} ({{ shelf.floorCode || '' }}/{{ shelf.sectionCode || '' }}/{{ shelf.rackCode || '' }})
+                      </option>
+                    }
+                  </select>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+      <div class="grid-footer">
+        <div class="grid-footer-left" style="display:flex; justify-content:flex-end; gap:10px; width:100%">
+          <button (click)="submit()" [disabled]="submitting || totalReceiveQty === 0" class="btn-save">
+            {{ submitting ? 'Saving...' : '💾 Save GRN' }}
+          </button>
+          <button (click)="cancel()" class="btn-cancel-top">Cancel</button>
+        </div>
+        <div class="grid-footer-right">
+          <span class="total-label">Total to Receive:</span>
+          <span class="total-val grand">{{ totalReceiveQty }}</span>
+        </div>
+      </div>
+    </div>
+  }
+
+  @if (selectedPOId && pendingItems.length === 0 && selectedPO) {
+    <div class="po-panel" style="margin-top:14px; padding:40px; text-align:center; color:#64748b;">
+       All items in this PO have been fully received. No pending items.
+    </div>
+  }
+</div>
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- PO Picker Modal                                        -->
+<!-- ══════════════════════════════════════════════════════ -->
+@if (showPOModal) {
+  <div class="modal-backdrop" (click)="closePOModal()">
+    <div class="modal-box" (click)="$event.stopPropagation()">
+
+      <!-- Modal header -->
+      <div class="modal-header">
+        <div class="modal-header-left">
+          <span class="modal-icon">📋</span>
+          <div>
+            <div class="modal-title">Select Purchase Order</div>
+            <div class="modal-sub">Choose an approved or partially received PO to create GRN</div>
+          </div>
+        </div>
+        <button class="modal-close-btn" (click)="closePOModal()">✕</button>
+      </div>
+
+      <!-- Search bar -->
+      <div class="modal-search-bar">
+        <span class="modal-search-icon"></span>
+        <input
+          type="text"
+          class="modal-search-input"
+          placeholder="Search by PO number, supplier, status..."
+          [(ngModel)]="poModalSearch"
+          (input)="onPOModalSearch()"
+          autofocus
+        />
+        @if (poModalSearch) {
+          <button class="modal-search-clear" (click)="clearPOModalSearch()">✕</button>
+        }
+      </div>
+
+      <!-- Results count -->
+      <div class="modal-results-info">
+        {{ filteredModalPOs.length }} purchase order(s) found
+        @if (poModalSearch) { <span class="modal-search-term">for "{{ poModalSearch }}"</span> }
+      </div>
+
+      <!-- PO Table -->
+      <div class="modal-table-wrap">
+        @if (filteredModalPOs.length === 0) {
+          <div class="modal-empty">
+            <div class="modal-empty-icon">📭</div>
+            <div>No purchase orders match your search.</div>
+          </div>
+        } @else {
+          <table class="modal-table">
+            <thead>
+              <tr>
+                <th class="modal-th-expand"></th>
+                <th>PO Number</th>
+                <th>Supplier</th>
+                <th>Order Date</th>
+                <th>Expected Date</th>
+                <th>Status</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (po of filteredModalPOs; track po.purchaseOrderId) {
+                <!-- Main PO row -->
+                <tr class="modal-row" [class.modal-row-expanded]="expandedPOId === po.purchaseOrderId">
+                  <td class="modal-td-expand">
+                    <button
+                      class="expand-btn"
+                      [class.expanded]="expandedPOId === po.purchaseOrderId"
+                      (click)="toggleExpand(po.purchaseOrderId)"
+                      title="Show order details">
+                      ›
+                    </button>
+                  </td>
+                  <td>
+                    <span class="modal-po-number">{{ po.pO_Number || po.po_Number || ('PO #' + po.purchaseOrderId) }}</span>
+                  </td>
+                  <td class="modal-supplier">{{ po.supplierName }}</td>
+                  <td class="modal-date">{{ po.orderDate | date:'mediumDate' }}</td>
+                  <td class="modal-date">{{ po.receiveDate | date:'mediumDate' }}</td>
+                  <td>
+                    <span class="modal-status-chip modal-status-{{ (po.status || '') | lowercase }}">{{ po.status }}</span>
+                  </td>
+                  <td>
+                    <button class="modal-select-btn" (click)="selectPOFromModal(po)">Select</button>
+                  </td>
+                </tr>
+
+                <!-- Expanded detail rows -->
+                @if (expandedPOId === po.purchaseOrderId) {
+                  <tr class="modal-detail-row">
+                    <td colspan="7" class="modal-detail-cell">
+                      @if (expandedPOLoading) {
+                        <div class="modal-detail-loading"> Loading order details...</div>
+                      } @else if (expandedPOItems.length === 0) {
+                        <div class="modal-detail-loading">No items found for this PO.</div>
+                      } @else {
+                        <div class="modal-detail-inner">
+                          <div class="modal-detail-title">Order Items</div>
+                          <table class="modal-detail-table">
+                            <thead>
+                              <tr>
+                                <th>#</th>
+                                <th>Book Title</th>
+                                <th>Edition</th>
+                                <th>Ordered</th>
+                                <th>Received</th>
+                                <th>Remaining</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              @for (item of expandedPOItems; track item.purchaseOrderItemId; let idx = $index) {
+                                <tr [class.item-fully-received]="item.remainingQuantity === 0">
+                                  <td>{{ idx + 1 }}</td>
+                                  <td class="detail-book-title">{{ item.bookTitle }}</td>
+                                  <td>{{ item.edition || '—' }}</td>
+                                  <td class="detail-center">{{ item.orderedQuantity }}</td>
+                                  <td class="detail-center">
+                                    <span class="detail-rcv-badge">{{ item.receivedQuantity }}</span>
+                                  </td>
+                                  <td class="detail-center">
+                                    @if (item.remainingQuantity === 0) {
+                                      <span class="detail-done-badge">✓ Done</span>
+                                    } @else {
+                                      <span class="detail-rem-badge">{{ item.remainingQuantity }}</span>
+                                    }
+                                  </td>
+                                </tr>
+                              }
+                            </tbody>
+                          </table>
+                        </div>
+                      }
+                    </td>
+                  </tr>
+                }
+              }
+            </tbody>
+          </table>
+        }
+      </div>
+
+      <!-- Modal footer -->
+      <div class="modal-footer">
+        <button class="modal-cancel-btn" (click)="closePOModal()">Cancel</button>
+      </div>
+
+    </div>
+  </div>
+}

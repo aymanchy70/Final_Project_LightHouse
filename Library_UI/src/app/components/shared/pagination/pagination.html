@@ -1,0 +1,33 @@
+@if (totalItems > 0) {
+  <div class="pagination-wrapper">
+    <div class="pagination-left">
+      <span class="pagination-info">
+        Showing <strong>{{ startItem }}</strong>–<strong>{{ endItem }}</strong>
+        of <strong>{{ totalItems }}</strong> results
+      </span>
+      <select class="page-size-select" (change)="onPageSizeChange($event)">
+        @for (opt of pageSizeOptions; track opt) {
+          <option [value]="opt" [selected]="opt === pageSize">{{ opt }} / page</option>
+        }
+      </select>
+    </div>
+
+    <div class="pagination-controls">
+      <button class="page-btn nav-btn" [class.disabled]="currentPage === 1" (click)="goToPage(1)" title="First">«</button>
+      <button class="page-btn nav-btn" [class.disabled]="currentPage === 1" (click)="goToPage(currentPage - 1)" title="Previous">‹</button>
+
+      @for (page of pages; track $index) {
+        @if (page === -1) {
+          <span class="ellipsis">…</span>
+        } @else {
+          <button class="page-btn" [class.active]="page === currentPage" (click)="goToPage(page)">
+            {{ page }}
+          </button>
+        }
+      }
+
+      <button class="page-btn nav-btn" [class.disabled]="currentPage === totalPages" (click)="goToPage(currentPage + 1)" title="Next">›</button>
+      <button class="page-btn nav-btn" [class.disabled]="currentPage === totalPages" (click)="goToPage(totalPages)" title="Last">»</button>
+    </div>
+  </div>
+}

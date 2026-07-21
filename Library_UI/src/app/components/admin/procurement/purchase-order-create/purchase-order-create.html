@@ -1,0 +1,344 @@
+<div class="po-page">
+
+  <!-- ── Top bar (title only, no save/cancel here) ──────── -->
+  <div class="po-topbar">
+    <div class="po-topbar-left">
+      <span class="po-topbar-title">📋 New Purchase Order</span>
+      <span class="po-topbar-sub">Acquisition / Purchase Orders / New</span>
+    </div>
+  </div>
+
+  @if (error)   { <div class="alert alert-error">{{ error }}</div> }
+  @if (success) { <div class="alert alert-success"> {{ success }}</div> }
+
+  <!-- ── Header fields panel + Additional Cost (top-right inline) ── -->
+  <div class="po-panel">
+    <div class="header-with-cost">
+
+      <!-- Left: field grid -->
+      <div class="field-grid">
+
+        <div class="field-row">
+          <label class="field-label">PO Number</label>
+          <span class="field-sep">:</span>
+          <div class="field-value readonly-val">Auto-Generated</div>
+        </div>
+
+        <div class="field-row">
+          <label class="field-label">Supplier <span class="req">*</span></label>
+          <span class="field-sep">:</span>
+          <div class="field-value">
+            <select [(ngModel)]="order.supplierId" (change)="onSupplierChange()" class="f-select">
+              <option [value]="null">— Select —</option>
+              @for (s of suppliers; track s.supplierId) {
+                <option [value]="s.supplierId">{{ s.name }}</option>
+              }
+            </select>
+          </div>
+        </div>
+
+        <div class="field-row">
+          <label class="field-label">Order Date <span class="req">*</span></label>
+          <span class="field-sep">:</span>
+          <div class="field-value">
+            <input type="date" [(ngModel)]="order.orderDate" class="f-input" />
+          </div>
+        </div>
+
+        <div class="field-row">
+          <label class="field-label">Expected Date <span class="req">*</span></label>
+          <span class="field-sep">:</span>
+          <div class="field-value">
+            <input type="date" [(ngModel)]="order.receiveDate" [min]="order.orderDate" class="f-input" />
+          </div>
+        </div>
+
+        <div class="field-row">
+          <label class="field-label">Delivery Address</label>
+          <span class="field-sep">:</span>
+          <div class="field-value">
+            <input type="text" [(ngModel)]="order.deliveryAddress" placeholder="Enter delivery address..." class="f-input" />
+          </div>
+        </div>
+
+        <div class="field-row">
+          <label class="field-label">Notes</label>
+          <span class="field-sep">:</span>
+          <div class="field-value">
+            <input type="text" [(ngModel)]="order.notes" placeholder="Optional notes..." class="f-input" />
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Right: compact Additional Cost card -->
+      <div class="add-cost-card">
+        <div class="add-cost-header">
+          <span class="add-cost-title">➕ Additional Costs</span>
+          <button type="button" class="btn-add-cost-sm" (click)="addAdditionalCostRow()">+ Add</button>
+        </div>
+        <div class="add-cost-rows">
+          @for (cost of additionalCosts; track $index) {
+            <div class="add-cost-row-sm">
+              <input type="text" [(ngModel)]="cost.description" placeholder="Description" class="add-cost-desc-input" />
+              <input type="number" [(ngModel)]="cost.amount" min="0" step="0.01" placeholder="0.00" class="add-cost-amt-input" />
+              @if (additionalCosts.length > 1) {
+                <button type="button" class="btn-del-cost-sm" (click)="removeAdditionalCostRow($index)">✕</button>
+              }
+            </div>
+          }
+        </div>
+        <div class="add-cost-total-row">
+          <span class="add-cost-total-label">Additional:</span>
+          <span class="add-cost-total-val">৳ {{ additionalCostsTotal.toFixed(2) }}</span>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Supplier info strip -->
+    @if (selectedSupplier) {
+      <div class="supplier-strip">
+        <span class="sup-name">🏭 {{ selectedSupplier.name }}</span>
+        @if (selectedSupplier.email)   { <span>📧 {{ selectedSupplier.email }}</span> }
+        @if (selectedSupplier.phone)   { <span>📞 {{ selectedSupplier.phone }}</span> }
+        @if (selectedSupplier.address) { <span>📍 {{ selectedSupplier.address }}</span> }
+      </div>
+    }
+
+  </div>
+
+  <!-- ── Book Selection Section ──────────────────────────── -->
+  <div class="po-panel" style="margin-top:14px">
+    <div class="section-bar">
+      <span class="section-title">📚 Select Book</span>
+      <!-- Quick Search lives in the section-bar top-right -->
+      <div class="quick-search-bar">
+        <div class="book-inline-search-wrapper">
+          <input
+            #inlineSearchInput
+            type="text"
+            [(ngModel)]="inlineSearchTerm"
+            (input)="onInlineSearch()"
+            (focus)="onInlineSearchFocus()"
+            (blur)="hideInlineResults()"
+            placeholder="🔎 Quick Search: title, ISBN, author..."
+            class="f-input book-inline-search-input quick-search-input"
+            autocomplete="off"
+          />
+          @if (inlineSearchTerm) {
+            <button class="book-inline-clear" (mousedown)="clearInlineSearch()">✕</button>
+          }
+          @if (showInlineResults && inlineSearchResults.length > 0) {
+            <div class="book-inline-results">
+              @for (book of inlineSearchResults; track book.bookId) {
+                <div class="inline-result-item" (mousedown)="selectBookFromInlineSearch(book)">
+                  <div class="inline-result-title">{{ book.title }}</div>
+                  <div class="inline-result-meta">
+                    <span>{{ book.masterISBN || 'No ISBN' }}</span>
+                    @if (book.itemCategoryName) { <span>· {{ book.itemCategoryName }}</span> }
+                    @if (book.language) { <span>· {{ book.language }}</span> }
+                  </div>
+                </div>
+              }
+            </div>
+          }
+          @if (showInlineResults && inlineSearchTerm && inlineSearchResults.length === 0) {
+            <div class="book-inline-results">
+              <div class="inline-no-results">No books found for "{{ inlineSearchTerm }}"</div>
+            </div>
+          }
+        </div>
+      </div>
+    </div>
+
+    <!-- Cascading dropdowns (no inline search here) -->
+    <div class="cascade-row">
+
+      <div class="cascade-item">
+        <label class="cascade-label">Category</label>
+        <select [(ngModel)]="selectedCategoryId" (change)="onCategoryChange()" class="f-select">
+          <option [value]="null">— All —</option>
+          @for (cat of categories; track cat.itemCategoryId) {
+            <option [value]="cat.itemCategoryId">{{ cat.categoryName }}</option>
+          }
+        </select>
+      </div>
+
+      <div class="cascade-item">
+        <label class="cascade-label">Sub Category</label>
+        <select [(ngModel)]="selectedSubCategoryId" (change)="onSubCategoryChange()" class="f-select">
+          <option [value]="null">— All —</option>
+          @for (sub of filteredSubCategories; track sub.subCategoryId) {
+            <option [value]="sub.subCategoryId">{{ sub.name }}</option>
+          }
+        </select>
+      </div>
+
+      <div class="cascade-item">
+        <label class="cascade-label">Book</label>
+        <div class="book-select-wrapper">
+          <div class="dropdown-button-wrapper">
+            <button
+              type="button"
+              class="book-dropdown-btn"
+              (click)="toggleBookDropdown()"
+              (blur)="hideBookDropdown()">
+              <span class="selected-book-text">
+                {{ selectedBook ? selectedBook.title : '— Select Book —' }}
+              </span>
+              <span class="dropdown-arrow">▼</span>
+            </button>
+
+            @if (showBookDropdown) {
+              <div class="book-dropdown-list">
+                <div class="dropdown-search">
+                  <input
+                    type="text"
+                    [(ngModel)]="bookSearchTerm"
+                    (input)="searchBooks()"
+                    placeholder="🔎 Search books..."
+                    class="dropdown-search-input"
+                    autocomplete="off"
+                  />
+                </div>
+                <div class="dropdown-items">
+                  @if (filteredBookOptions.length > 0) {
+                    @for (book of filteredBookOptions; track book.bookId) {
+                      <div class="dropdown-item" (mousedown)="selectBook(book)">
+                        <div class="item-title">{{ book.title }}</div>
+                        <div class="item-meta">
+                          {{ book.masterISBN || 'No ISBN' }} | {{ book.language || '' }}
+                        </div>
+                      </div>
+                    }
+                  } @else {
+                    <div class="no-results">
+                      @if (bookSearchTerm) {
+                        No books found for "{{ bookSearchTerm }}"
+                      } @else {
+                        No books available
+                      }
+                    </div>
+                  }
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+
+      <div class="cascade-item">
+        <label class="cascade-label">Edition</label>
+        <div class="cascade-add-row">
+          <select [(ngModel)]="selectedEditionId" class="f-select">
+            <option [value]="null">— Select —</option>
+            @for (ed of filteredEditions; track ed.bookEditionId) {
+              <option [value]="ed.bookEditionId">{{ ed.edition }} ({{ ed.isbn }})</option>
+            }
+          </select>
+          <button (click)="addEdition()" [disabled]="!selectedEditionId" class="btn-add-edition">+ Add</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+
+  <!-- ── Items Table ─────────────────────────────────────── -->
+  <div class="po-panel" style="margin-top:14px">
+    <div class="section-bar">
+      <span class="section-title">📋 Order Details</span>
+      <span class="row-count-hint">{{ items.length }} item(s)</span>
+    </div>
+
+    <div class="grid-wrap">
+      <table class="data-grid">
+        <thead>
+          <tr class="grid-head">
+            <th class="col-sl">SL</th>
+            <th class="col-title">Book</th>
+            <th class="col-author">Author</th>
+            <th class="col-unit">Unit</th>
+            <th class="col-qty">Qty</th>
+            <th class="col-rate">Unit Price</th>
+            <th class="col-amt">Total Price</th>
+            <th class="col-del"></th>
+          </tr>
+        </thead>
+        <tbody>
+          @if (items.length === 0) {
+            <tr>
+              <td colspan="8" class="empty-row">Select a category, sub‑category, book and edition above, then click <strong>+ Add</strong>.</td>
+            </tr>
+          }
+          @for (item of items; track item.bookEditionId; let i = $index) {
+            <tr class="grid-row">
+              <td class="col-sl center">{{ i + 1 }}</td>
+              <td class="col-title">
+                <div class="cell-title">{{ item.bookTitle }}</div>
+                <div class="cell-edition">{{ item.edition }}</div>
+              </td>
+              <td class="col-author">{{ item.authorNames }}</td>
+              <td class="col-unit center">
+                <select [(ngModel)]="item.unit" class="grid-select">
+                  <option value="pcs">Pcs</option>
+                  <option value="dozen">Dozen</option>
+                </select>
+              </td>
+              <td class="col-qty center">
+                <input type="number" [(ngModel)]="item.quantity" min="1" max="9999" class="grid-input unit-input" />
+              </td>
+              <td class="col-rate">
+                <input type="number" [(ngModel)]="item.unitCost" step="0.01" min="0" placeholder="0.00" class="grid-input rate-input" />
+              </td>
+              <td class="col-amt right">
+                {{ (item.quantity * (item.unitCost || 0)).toFixed(2) }}
+              </td>
+              <td class="col-del center">
+                <button (click)="removeItem(i)" class="btn-del" title="Remove row">🗑</button>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Grid footer with stacked totals -->
+    <div class="grid-footer">
+      <div class="grid-footer-left">
+        <span class="row-count">{{ items.length }} row(s)</span>
+        <span class="total-qty-inline">Total Qty: <strong>{{ totalQty }}</strong></span>
+      </div>
+      <div class="totals-stack">
+        <div class="totals-stack-row">
+          <span class="ts-label">Order Total</span>
+          <span class="ts-sep">:</span>
+          <span class="ts-val">৳ {{ orderTotal.toFixed(2) }}</span>
+        </div>
+        @if (additionalCostsTotal > 0) {
+          <div class="totals-stack-row">
+            <span class="ts-label">Additional Total</span>
+            <span class="ts-sep">:</span>
+            <span class="ts-val">৳ {{ additionalCostsTotal.toFixed(2) }}</span>
+          </div>
+        }
+        <div class="totals-stack-divider"></div>
+        <div class="totals-stack-row grand-row">
+          <span class="ts-label">Grand Total</span>
+          <span class="ts-sep">:</span>
+          <span class="ts-val grand">৳ {{ grandTotal.toFixed(2) }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Bottom action bar (Save / Cancel) ──────────────── -->
+  <div class="bottom-action-bar">
+    <button (click)="cancel()" class="btn-cancel-bottom">✕ Cancel</button>
+    <button (click)="submit()" [disabled]="submitting || !items.length" class="btn-save-bottom">
+      {{ submitting ? 'Saving...' : '💾 Save Purchase Order' }}
+    </button>
+  </div>
+
+</div>

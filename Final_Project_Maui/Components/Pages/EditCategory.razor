@@ -1,0 +1,57 @@
+﻿@page "/categories/edit/{id:int}"
+@using Final_Project_Maui.Models
+@using Final_Project_Maui.Services
+@inject ItemCategoryService CategoryService
+@inject NavigationManager Navigation
+
+<h3>Edit Category</h3>
+
+@if (category == null)
+{
+    <p>Loading...</p>
+}
+else
+{
+    <EditForm Model="@category" OnValidSubmit="@HandleValidSubmit">
+        <DataAnnotationsValidator />
+        <ValidationSummary class="text-danger" />
+
+        <div class="mb-3">
+            <label for="categoryName" class="form-label">Category Name</label>
+            <InputText id="categoryName" class="form-control" @bind-Value="category.CategoryName" />
+            <ValidationMessage For="@(() => category.CategoryName)" />
+        </div>
+
+        <div class="mb-3">
+            <label for="categoryDesc" class="form-label">Description (optional)</label>
+            <InputText id="categoryDesc" class="form-control" @bind-Value="category.CategoryDescription" />
+        </div>
+
+        <button type="submit" class="btn btn-success">Save</button>
+        <button type="button" class="btn btn-secondary" @onclick="Cancel">Cancel</button>
+    </EditForm>
+}
+
+@code {
+    [Parameter] public int id { get; set; }
+    private ItemCategoryDto? category;
+
+    protected override async Task OnInitializedAsync()
+    {
+        category = await CategoryService.GetCategoryByIdAsync(id);
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        if (category != null)
+        {
+            await CategoryService.UpdateCategoryAsync(id, category);
+            Navigation.NavigateTo("/categories");
+        }
+    }
+
+    private void Cancel()
+    {
+        Navigation.NavigateTo("/categories");
+    }
+}

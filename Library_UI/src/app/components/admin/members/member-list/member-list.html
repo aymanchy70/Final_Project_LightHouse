@@ -1,0 +1,91 @@
+<div class="container">
+  <div class="header">
+    <h2>👤 Members</h2>
+    <a routerLink="/admin/members/add" class="btn-add">+ Add Member</a>
+  </div>
+
+  <div class="toolbar">
+    <input type="text" [(ngModel)]="searchTerm" (input)="refresh()" placeholder=" Search name, phone, type..." class="search-input" />
+    <div class="list-tabs">
+      <button class="tab-btn" [class.active]="listTab === 'Active'" (click)="setTab('Active')">Active Members</button>
+      <button class="tab-btn" [class.active]="listTab === 'Pending'" (click)="setTab('Pending')">Pending Approvals</button>
+    </div>
+  </div>
+
+  @if (error) { <div class="alert-error">{{ error }}</div> }
+  @if (loading) { <div class="alert-info"> Loading...</div> }
+  @if (!loading && filtered.length === 0 && !error) {
+    <div class="alert-warning">
+      {{ listTab === 'Pending' ? 'No pending membership applications.' : 'No members found.' }}
+    </div>
+  }
+
+  @if (!loading && filtered.length > 0) {
+    <table>
+      <thead>
+        <tr>
+          <th class="sortable" (click)="sortBy('memberId')"># {{ icon('memberId') }}</th>
+          <th class="sortable" (click)="sortBy('fullName')">Full Name {{ icon('fullName') }}</th>
+          <th>Phone</th>
+          <th>Membership Type</th>
+          @if (listTab === 'Active') {
+            <th>Expiry Date</th>
+            <th>Outstanding Fine</th>
+            <th>Blocked</th>
+          }
+          <th class="sortable" (click)="sortBy('isActive')">Status {{ icon('isActive') }}</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (item of paged; track item.memberId) {
+          <tr>
+            <td>{{ item.memberId }}</td>
+            <td><strong>{{ item.fullName }}</strong></td>
+            <td>{{ item.phone || '—' }}</td>
+            <td>{{ item.membershipTypeName || '—' }}</td>
+            @if (listTab === 'Active') {
+              <td>{{ item.membershipExpiryDate ? (item.membershipExpiryDate | date:'mediumDate') : '—' }}</td>
+              <td>{{ item.outstandingFine > 0 ? '৳' + item.outstandingFine : '৳0' }}</td>
+              <td>
+                @if (item.isBlocked) { <span class="badge-inactive">🔴 Blocked</span> }
+                @else { <span class="badge-active">🟢 OK</span> }
+              </td>
+            }
+            <td>
+              @if (item.isActive) { <span class="badge-active">Active</span> }
+              @else { <span class="badge-inactive">Pending</span> }
+            </td>
+            <td class="actions">
+              @if (listTab === 'Pending') {
+                <button (click)="approve(item.memberId)" class="btn-approve" [disabled]="processingId === item.memberId">
+                  {{ processingId === item.memberId ? '...' : 'Approve' }}
+                </button>
+                <button (click)="reject(item.memberId)" class="btn-reject" [disabled]="processingId === item.memberId">
+                  Reject
+                </button>
+              } @else {
+                <button (click)="details(item.memberId)" class="btn-details"> Details</button>
+                <button (click)="edit(item.memberId)" class="btn-edit"> Edit</button>
+                <!-- FIX #6: Block / Unblock buttons wired to new service methods -->
+                @if (item.isBlocked) {
+                  <button (click)="unblock(item.memberId)" class="btn-approve" [disabled]="processingId === item.memberId">
+                    {{ processingId === item.memberId ? '...' : '🔓 Unblock' }}
+                  </button>
+                } @else {
+                  <button (click)="block(item.memberId)" class="btn-reject" [disabled]="processingId === item.memberId">
+                    {{ processingId === item.memberId ? '...' : '🔒 Block' }}
+                  </button>
+                }
+                <button (click)="delete(item.memberId)" class="btn-delete">🗑️ Delete</button>
+              }
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+    <app-pagination [currentPage]="currentPage" [totalItems]="filtered.length" [pageSize]="pageSize"
+      (pageChanged)="onPageChanged($event)" (pageSizeChanged)="onPageSizeChanged($event)">
+    </app-pagination>
+  }
+</div>

@@ -1,0 +1,46 @@
+<div class="container">
+  <div class="header">
+    <h2>🏭 Suppliers</h2>
+    <a routerLink="/admin/suppliers/add" class="btn-add">+ Add Supplier</a>
+  </div>
+  <div class="toolbar">
+    <input type="text" [(ngModel)]="searchTerm" (input)="refresh()" placeholder=" Search name, email, phone..." class="search-input" />
+  </div>
+  @if (error) { <div class="alert-error">{{ error }}</div> }
+  @if (successMessage) { <div class="alert-success"> {{ successMessage }}</div> }
+  @if (loading) { <div class="alert-info"> Loading...</div> }
+  @if (!loading && filtered.length === 0 && !error) { <div class="alert-warning">No suppliers found.</div> }
+  @if (!loading && filtered.length > 0) {
+    <table>
+      <thead>
+        <tr>
+          <th class="sortable" (click)="sortBy('supplierId')"># {{ icon('supplierId') }}</th>
+          <th class="sortable" (click)="sortBy('name')">Name {{ icon('name') }}</th>
+          <th>Email</th>
+          <th>Phone</th>
+          <th>Address</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (item of paged; track item.supplierId) {
+          <tr>
+            <td>{{ item.supplierId }}</td>
+            <td><strong>{{ item.name }}</strong></td>
+            <td>{{ item.email || '—' }}</td>
+            <td>{{ item.phone || '—' }}</td>
+            <td>{{ item.address || '—' }}</td>
+            <td class="actions">
+              <button (click)="details(item.supplierId)" class="btn-details"> Details</button>
+              <button (click)="edit(item.supplierId)" class="btn-edit"> Edit</button>
+              <button (click)="delete(item.supplierId)" class="btn-delete">🗑️ Delete</button>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+    <app-pagination [currentPage]="currentPage" [totalItems]="filtered.length" [pageSize]="pageSize"
+      (pageChanged)="onPageChanged($event)" (pageSizeChanged)="onPageSizeChanged($event)">
+    </app-pagination>
+  }
+</div>

@@ -1,0 +1,105 @@
+﻿@page "/categories"
+@using Final_Project_Maui.Models
+@using Final_Project_Maui.Services
+@inject ItemCategoryService CategoryService
+@inject NavigationManager Navigation
+
+<h3>Item Categories</h3>
+
+@if (errorMessage != null)
+{
+    <div class="alert alert-danger">
+        <strong>Error:</strong> @errorMessage
+        <br />
+        <button class="btn btn-sm btn-primary mt-2" @onclick="LoadCategories">Retry</button>
+    </div>
+}
+
+<button class="btn btn-primary mb-3" @onclick="GoToAdd">
+    Add Category
+</button>
+
+@if (categories == null && errorMessage == null)
+{
+    <p>Loading...</p>
+}
+else if (categories != null && categories.Count == 0)
+{
+    <p>No categories found.</p>
+}
+else if (categories != null)
+{
+    <table class="table">
+        <thead>
+            <tr><th>ID</th><th>Name</th><th>Description</th><th>Active</th><th>Actions</th></tr>
+        </thead>
+        <tbody>
+            @foreach (var cat in categories)
+            {
+                <tr>
+                    <td>@cat.ItemCategoryId</td>
+                    <td>@cat.CategoryName</td>
+                    <td>@cat.CategoryDescription</td>
+                    <td>@(cat.IsActive ? "Yes" : "No")</td>
+                    <td>
+                        <button class="btn btn-warning" @onclick="() => Edit(cat.ItemCategoryId)">Edit</button>
+                        <button class="btn btn-danger" @onclick="() => Delete(cat.ItemCategoryId)">Delete</button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private List<ItemCategoryDto>? categories;
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadCategories();
+    }
+
+    private async Task LoadCategories()
+    {
+        errorMessage = null;
+        try
+        {
+            categories = await CategoryService.GetCategoriesAsync();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+            categories = null;
+        }
+        StateHasChanged();
+    }
+
+    private void GoToAdd()
+    {
+        Navigation.NavigateTo("/categories/add");
+    }
+
+    private void Edit(int id)
+    {
+        Navigation.NavigateTo("/categories/edit/" + id);
+    }
+
+    private async Task Delete(int id)
+    {
+        bool confirm = await Application.Current.MainPage.DisplayAlert("Confirm", "Delete this category?", "Yes", "No");
+        if (confirm)
+        {
+            try
+            {
+                await CategoryService.DeleteCategoryAsync(id);
+                await LoadCategories();
+            }
+            catch (Exception ex)
+            {
+                errorMessage = ex.Message;
+                StateHasChanged();
+            }
+        }
+    }
+}

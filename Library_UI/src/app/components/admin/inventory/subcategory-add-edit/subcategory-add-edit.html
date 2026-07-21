@@ -1,0 +1,63 @@
+<div class="container">
+  <div class="header">
+    <h2>{{ viewOnly ? ' View SubCategory' : (subcategoryId ? ' Edit SubCategory' : ' Add SubCategory') }}</h2>
+  </div>
+
+  @if (error) { <div class="alert-error">{{ error }}</div> }
+  @if (success) { <div class="alert-success"> {{ success }}</div> }
+  @if (loading) { <div class="alert-info"> Loading...</div> }
+
+  @if (!loading) {
+    <div class="form-box">
+
+      <div class="form-group">
+        <label>Name <span class="required">*</span></label>
+        <input type="text" [(ngModel)]="subcategory.name" placeholder="SubCategory name" maxlength="100" [disabled]="viewOnly" />
+      </div>
+
+      <div class="form-group">
+        <label>Description</label>
+        <textarea [(ngModel)]="subcategory.description" placeholder="Brief description (optional)" rows="3" [disabled]="viewOnly"></textarea>
+      </div>
+
+      <div class="form-group">
+        <label>Category <span class="required">*</span></label>
+        <select [(ngModel)]="subcategory.categoryId" [disabled]="viewOnly">
+          <option [value]="0" disabled>Select a category</option>
+          @for (cat of categories; track cat.itemCategoryId) {
+            <option [value]="cat.itemCategoryId">{{ cat.categoryName }}</option>
+          }
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label class="checkbox-label">
+          <input type="checkbox" [(ngModel)]="subcategory.isActive" [disabled]="viewOnly" />
+          <span>Active</span>
+        </label>
+      </div>
+
+      @if (!subcategoryId) {
+        <div class="form-group">
+          <label>Created By</label>
+          <input type="text" [(ngModel)]="subcategory.createdBy" placeholder="Your name" [disabled]="viewOnly" />
+        </div>
+      }
+      @if (subcategoryId) {
+        <div class="form-group">
+          <label>Updated By</label>
+          <input type="text" [(ngModel)]="subcategory.updatedBy" placeholder="Your name" [disabled]="viewOnly" />
+        </div>
+      }
+
+      <div class="form-actions">
+        @if (!viewOnly) {
+          <button (click)="submit()" [disabled]="submitting" class="btn-save">
+            {{ submitting ? 'Saving...' : (subcategoryId ? 'Update SubCategory' : 'Create SubCategory') }}
+          </button>
+        }
+        <button (click)="cancel()" [disabled]="submitting" class="btn-cancel">{{ viewOnly ? 'Back' : 'Cancel' }}</button>
+      </div>
+    </div>
+  }
+</div>

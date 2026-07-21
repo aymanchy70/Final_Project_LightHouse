@@ -1,0 +1,127 @@
+<div class="container">
+  <div class="header">
+    <h2>{{ viewOnly ? ' View Author' : (authorId ? ' Edit Author' : ' Add Author') }}</h2>
+  </div>
+
+  @if (error) {
+    <div class="alert-error">{{ error }}</div>
+  }
+  @if (success) {
+    <div class="alert-success"> {{ success }}</div>
+  }
+  @if (loading) {
+    <div class="alert-info"> Loading...</div>
+  }
+
+  @if (!loading) {
+    <form #authorForm="ngForm" (ngSubmit)="submit()" autocomplete="off" novalidate [attr.class]="viewOnly ? 'readonly-form' : ''">
+      <div class="form-box">
+
+        <p class="section-title">Basic Information</p>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Full Name <span class="required">*</span></label>
+            <input
+              type="text"
+              name="fullName"
+              [(ngModel)]="author.fullName"
+              required
+              placeholder="Author's full name"
+              autocomplete="off"
+              [disabled]="viewOnly"
+            />
+          </div>
+          <div class="form-group">
+            <label>Pseudonym <span class="optional">(optional)</span></label>
+            <input
+              type="text"
+              name="pseudonym"
+              [(ngModel)]="author.pseudonym"
+              placeholder="Pen name"
+              autocomplete="off"
+              [disabled]="viewOnly"
+            />
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Date of Birth</label>
+            <input type="date" name="dateOfBirth" [(ngModel)]="author.dateOfBirth" [disabled]="viewOnly" />
+          </div>
+          <div class="form-group">
+            <label>Date of Death <span class="optional">(if applicable)</span></label>
+            <input type="date" name="dateOfDeath" [(ngModel)]="author.dateOfDeath" [disabled]="viewOnly" />
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Nationality</label>
+            <input
+              type="text"
+              name="nationality"
+              [(ngModel)]="author.nationality"
+              placeholder="e.g. Bangladeshi"
+              autocomplete="off"
+              [disabled]="viewOnly"
+            />
+          </div>
+          <div class="form-group">
+            <label>Email</label>
+            <input
+              type="email"
+              name="authorEmail"
+              [(ngModel)]="author.email"
+              placeholder="author@email.com"
+              autocomplete="new-password"
+              [disabled]="viewOnly"
+            />
+          </div>
+        </div>
+
+        <p class="section-title">Additional Details</p>
+
+        <div class="form-group">
+          <label>Photo <span class="optional">(optional)</span></label>
+          <div style="display: flex; gap: 8px; align-items: center;">
+            <input
+              type="file"
+              accept="image/png,image/jpeg,image/jpg,image/gif,image/webp,image/bmp,image/svg+xml,image/tiff,image/*"
+              (change)="onPhotoFileSelected($event)"
+              [disabled]="viewOnly"
+              style="flex: 1;"
+            />
+            @if (author.photoFile) {
+              <span style="font-size: 12px; color: #16a34a; white-space: nowrap;">✓ {{ author.photoFile.name }}</span>
+            }
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Biography <span class="optional">(optional)</span></label>
+          <textarea
+            name="biography"
+            [(ngModel)]="author.biography"
+            placeholder="Short biography"
+            rows="4"
+            [disabled]="viewOnly"
+          ></textarea>
+        </div>
+
+        <div class="form-actions">
+          @if (!viewOnly) {
+            <button type="submit" [disabled]="submitting" class="btn-save">
+              {{ submitting ? 'Saving...' : (authorId ? 'Update Author' : 'Create Author') }}
+            </button>
+          }
+          <button type="button" (click)="cancel()" [disabled]="submitting" class="btn-cancel">
+            {{ viewOnly ? 'Back' : 'Cancel' }}
+          </button>
+        </div>
+
+      </div>
+    </form>
+  }
+</div>

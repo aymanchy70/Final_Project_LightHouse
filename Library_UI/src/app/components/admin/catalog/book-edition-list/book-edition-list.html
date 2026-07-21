@@ -1,0 +1,65 @@
+<div class="container">
+  <div class="header">
+    <h2>📖 Book Editions</h2>
+    <a routerLink="/admin/book-editions/add" class="btn-add">+ Add Edition</a>
+  </div>
+
+  <div class="toolbar">
+    <input type="text" [(ngModel)]="searchTerm" (input)="refresh()" placeholder=" Search book, ISBN, edition..." class="search-input" />
+    <select [(ngModel)]="filterSoftCopy" (change)="refresh()" class="filter-select">
+      <option value="">All</option>
+      <option value="yes">Has Soft Copy</option>
+      <option value="no">No Soft Copy</option>
+    </select>
+  </div>
+
+  @if (error) { <div class="alert-error">{{ error }}</div> }
+  @if (successMessage) { <div class="alert-success"> {{ successMessage }}</div> }
+  @if (loading) { <div class="alert-info"> Loading...</div> }
+  @if (!loading && filtered.length === 0 && !error) { <div class="alert-warning">No editions found.</div> }
+
+  @if (!loading && filtered.length > 0) {
+    <table>
+      <thead>
+        <tr>
+          <th class="sortable" (click)="sortBy('bookEditionId')"># {{ icon('bookEditionId') }}</th>
+          <th class="sortable" (click)="sortBy('bookTitle')">Book {{ icon('bookTitle') }}</th>
+          <th class="sortable" (click)="sortBy('edition')">Edition {{ icon('edition') }}</th>
+          <th class="sortable" (click)="sortBy('isbn')">ISBN {{ icon('isbn') }}</th>
+          <th class="sortable" (click)="sortBy('language')">Language {{ icon('language') }}</th>
+          <th class="sortable" (click)="sortBy('price')">Price {{ icon('price') }}</th>
+          <th class="sortable" (click)="sortBy('hasSoftCopy')">Soft Copy {{ icon('hasSoftCopy') }}</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (item of paged; track item.bookEditionId) {
+          <tr>
+            <td>{{ item.bookEditionId }}</td>
+            <td><strong>{{ item.bookTitle || '—' }}</strong></td>
+            <td>{{ item.edition || '—' }}</td>
+            <td>{{ item.isbn || '—' }}</td>
+            <td>{{ item.language || '—' }}</td>
+            <td>{{ item.price ? ('৳' + item.price) : '—' }}</td>
+            <td>
+              @if (item.hasSoftCopy) { <span class="badge-yes">Yes</span> }
+              @else { <span class="badge-no">No</span> }
+            </td>
+            <td class="actions">
+              <button (click)="details(item.bookEditionId)" class="btn-details"> Details</button>
+              <button (click)="edit(item.bookEditionId)" class="btn-edit"> Edit</button>
+              <button (click)="delete(item.bookEditionId)" class="btn-delete">🗑️ Delete</button>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+    <app-pagination
+      [currentPage]="currentPage"
+      [totalItems]="filtered.length"
+      [pageSize]="pageSize"
+      (pageChanged)="onPageChanged($event)"
+      (pageSizeChanged)="onPageSizeChanged($event)">
+    </app-pagination>
+  }
+</div>

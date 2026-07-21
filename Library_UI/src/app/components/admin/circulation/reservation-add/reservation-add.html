@@ -1,0 +1,43 @@
+<div class="container">
+  <div class="page-header">
+    <button (click)="goBack()" class="btn-back">← Back to Reservations</button>
+    <h2>📌 New Reservation</h2>
+  </div>
+
+  @if (error)          { <div class="alert-error">{{ error }}</div> }
+  @if (successMessage) { <div class="alert-success">{{ successMessage }}</div> }
+
+  <div class="form-card">
+
+    <div class="form-note">
+      ⚠️ A reservation can only be created when there are <strong>no available physical copies</strong> of the chosen edition. The API will reject the request if copies are available.
+    </div>
+
+    <div class="form-group">
+      <label>Member *</label>
+      <select [(ngModel)]="form.memberId">
+        <option [ngValue]="null">-- Select Member --</option>
+        @for (m of members; track m.memberId) {
+          <option [ngValue]="m.memberId">{{ m.fullName }} (ID: {{ m.memberId }})</option>
+        }
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label>Book Edition *</label>
+      <select [(ngModel)]="form.bookEditionId">
+        <option [ngValue]="null">-- Select Book Edition --</option>
+        @for (e of bookEditions; track e.bookEditionId) {
+          <option [ngValue]="e.bookEditionId">{{ e.bookTitle }} — {{ e.edition }} (ID: {{ e.bookEditionId }})</option>
+        }
+      </select>
+    </div>
+
+    <div class="form-actions">
+      <button (click)="goBack()" class="btn-cancel">Cancel</button>
+      <button (click)="submit()" class="btn-submit" [disabled]="submitting">
+        {{ submitting ? 'Creating...' : 'Create Reservation' }}
+      </button>
+    </div>
+  </div>
+</div>

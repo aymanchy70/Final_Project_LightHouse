@@ -1,0 +1,128 @@
+<div class="container">
+  <div class="header">
+    <h2>{{ viewOnly ? ' View Shelf' : (shelfId ? ' Edit Shelf' : ' Add Shelf') }}</h2>
+  </div>
+
+  @if (error) {
+    <div class="alert-error">{{ error }}</div>
+  }
+  @if (success) {
+    <div class="alert-success"> {{ success }}</div>
+  }
+  @if (loading) {
+    <div class="alert-info"> Loading...</div>
+  }
+
+  @if (!loading) {
+    <div class="form-box">
+      <div class="form-group">
+        <label>Parent Rack <span class="required">*</span></label>
+        <select [(ngModel)]="shelf.rackId" [disabled]="viewOnly" name="rackId">
+          <option value="0" disabled>-- Select Rack --</option>
+          @for (rack of filteredRacks; track rack.rackId) {
+            <option [value]="rack.rackId">
+              {{ rack.rackCode }} - {{ rack.rackName }}
+            </option>
+          }
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>Shelf Code <span class="required">*</span></label>
+        <input 
+          type="text" 
+          [(ngModel)]="shelf.shelfCode" 
+          [disabled]="viewOnly"
+          placeholder="e.g., SH-01, SH-02"
+          name="shelfCode"
+        />
+      </div>
+
+      <div class="form-group">
+        <label>Shelf Level <span class="required">*</span></label>
+        <input 
+          type="number" 
+          [(ngModel)]="shelf.shelfLevel" 
+          [disabled]="viewOnly"
+          min="1"
+          max="20"
+          placeholder="e.g., 1"
+          name="shelfLevel"
+        />
+        <small>Between 1 and 20</small>
+      </div>
+
+      <div class="form-group">
+        <label>Shelf Label</label>
+        <input 
+          type="text" 
+          [(ngModel)]="shelf.shelfLabel" 
+          [disabled]="viewOnly"
+          placeholder="e.g., Top Shelf, Bottom Shelf"
+          name="shelfLabel"
+        />
+      </div>
+
+      <div class="form-group">
+        <label>Max Capacity <span class="required">*</span></label>
+        <input 
+          type="number" 
+          [(ngModel)]="shelf.maxCapacity" 
+          [disabled]="viewOnly"
+          min="1"
+          max="200"
+          placeholder="e.g., 80"
+          name="maxCapacity"
+        />
+        <small>Between 1 and 200 items</small>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>DDC Range Start</label>
+          <input 
+            type="text" 
+            [(ngModel)]="shelf.ddcRangeStart" 
+            [disabled]="viewOnly"
+            placeholder="e.g., 000"
+            name="ddcRangeStart"
+          />
+        </div>
+        <div class="form-group">
+          <label>DDC Range End</label>
+          <input 
+            type="text" 
+            [(ngModel)]="shelf.ddcRangeEnd" 
+            [disabled]="viewOnly"
+            placeholder="e.g., 099"
+            name="ddcRangeEnd"
+          />
+        </div>
+      </div>
+
+      @if (!viewOnly) {
+        <div class="form-actions">
+          <button 
+            (click)="submit()" 
+            [disabled]="submitting"
+            class="btn-submit"
+          >
+            {{ submitting ? ' Saving...' : '💾 Save' }}
+          </button>
+          <button 
+            routerLink="/admin/location/shelves"
+            class="btn-cancel"
+          >
+            ❌ Cancel
+          </button>
+        </div>
+      } @else {
+        <div class="form-actions">
+          <a routerLink="/admin/location/shelves" class="btn-cancel">
+            ← Back to Shelves
+          </a>
+        </div>
+      }
+    </div>
+  }
+</div>

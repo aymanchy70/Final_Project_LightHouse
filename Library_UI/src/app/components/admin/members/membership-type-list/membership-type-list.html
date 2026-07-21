@@ -1,0 +1,63 @@
+<div class="container">
+  <div class="header">
+    <h2>🎫 Membership Types</h2>
+    <a routerLink="/admin/membership-types/add" class="btn-add">+ Add Type</a>
+  </div>
+
+  <div class="toolbar">
+    <input type="text" [(ngModel)]="searchTerm" (input)="refresh()" placeholder=" Search name or description..." class="search-input" />
+  </div>
+
+  @if (error) { <div class="alert-error">{{ error }}</div> }
+  @if (successMessage) { <div class="alert-success"> {{ successMessage }}</div> }
+  @if (loading) { <div class="alert-info"> Loading...</div> }
+  @if (!loading && filtered.length === 0 && !error) { <div class="alert-warning">No membership types found.</div> }
+
+  @if (!loading && filtered.length > 0) {
+    <table>
+      <thead>
+        <tr>
+          <th class="sortable" (click)="sortBy('membershipTypeId')"># {{ icon('membershipTypeId') }}</th>
+          <th class="sortable" (click)="sortBy('name')">Name {{ icon('name') }}</th>
+          <th>Description</th>
+          <th class="sortable" (click)="sortBy('maxBooksCanBorrow')">Max Books {{ icon('maxBooksCanBorrow') }}</th>
+          <th class="sortable" (click)="sortBy('loanPeriodDays')">Loan Days {{ icon('loanPeriodDays') }}</th>
+          <th>Rare Books</th>
+          <th class="sortable" (click)="sortBy('yearlyFee')">Yearly Fee {{ icon('yearlyFee') }}</th>
+          <th class="sortable" (click)="sortBy('maxOutstandingFine')">Max Fine {{ icon('maxOutstandingFine') }}</th>
+          <th class="sortable" (click)="sortBy('isActive')">Status {{ icon('isActive') }}</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (item of paged; track item.membershipTypeId) {
+          <tr>
+            <td>{{ item.membershipTypeId }}</td>
+            <td><strong>{{ item.name }}</strong></td>
+            <td>{{ item.description || '—' }}</td>
+            <td>{{ item.maxBooksCanBorrow }}</td>
+            <td>{{ item.loanPeriodDays }} days</td>
+            <td>
+              @if (item.canBorrowRareBooks) { <span class="badge-yes"> Yes</span> }
+              @else { <span class="badge-no">❌ No</span> }
+            </td>
+            <td>${{ item.yearlyFee | number:'1.2-2' }}</td>
+            <td>${{ item.maxOutstandingFine | number:'1.2-2' }}</td>
+            <td>
+              @if (item.isActive) { <span class="badge-active">Active</span> }
+              @else { <span class="badge-inactive">Inactive</span> }
+            </td>
+            <td class="actions">
+              <button (click)="details(item.membershipTypeId)" class="btn-details"> Details</button>
+              <button (click)="edit(item.membershipTypeId)" class="btn-edit"> Edit</button>
+              <button (click)="delete(item.membershipTypeId)" class="btn-delete">🗑️ Delete</button>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+    <app-pagination [currentPage]="currentPage" [totalItems]="filtered.length" [pageSize]="pageSize"
+      (pageChanged)="onPageChanged($event)" (pageSizeChanged)="onPageSizeChanged($event)">
+    </app-pagination>
+  }
+</div>

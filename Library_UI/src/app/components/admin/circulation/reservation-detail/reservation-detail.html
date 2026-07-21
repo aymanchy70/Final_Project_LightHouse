@@ -1,0 +1,71 @@
+<div class="container">
+  <div class="page-header">
+    <button (click)="goBack()" class="btn-back">← Back to Reservations</button>
+    <h2>📌 Reservation Detail</h2>
+  </div>
+
+  @if (error) { <div class="alert-error">{{ error }}</div> }
+  @if (loading) { <div class="alert-info">Loading...</div> }
+
+  @if (reservation) {
+    <div class="detail-grid">
+
+      <div class="card">
+        <div class="card-header">
+          <h3>📌 Reservation #{{ reservation.reservationId }}</h3>
+          <span [class]="getStatusBadgeClass(reservation.status)">{{ reservation.status }}</span>
+        </div>
+        <div class="card-body">
+          <div class="info-row">
+            <span class="label">Member</span>
+            <span class="value">{{ reservation.memberName || '—' }} <small class="muted">(ID: {{ reservation.memberId }})</small></span>
+          </div>
+          <div class="info-row">
+            <span class="label">Book Title</span>
+            <span class="value">{{ reservation.bookTitle || '—' }}</span>
+          </div>
+          <div class="info-row">
+            <span class="label">Edition</span>
+            <span class="value">{{ reservation.edition || '—' }}</span>
+          </div>
+          <div class="info-row">
+            <span class="label">Book Edition ID</span>
+            <span class="value">{{ reservation.bookEditionId }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header"><h3>📅 Dates</h3></div>
+        <div class="card-body">
+          <div class="info-row">
+            <span class="label">Reserved On</span>
+            <span class="value">{{ reservation.reservationDate | date:'medium' }}</span>
+          </div>
+          <div class="info-row">
+            <span class="label">Fulfilled At</span>
+            <span class="value">{{ reservation.fulfilledAt ? (reservation.fulfilledAt | date:'medium') : '—' }}</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Action Bar -->
+    <div class="actions-bar">
+      <h3>Admin Actions</h3>
+      <div class="action-buttons">
+        @if (canCancel()) {
+          <button (click)="cancel()" class="btn-cancel-res" [disabled]="actionLoading">
+            ✕ {{ actionLoading ? 'Cancelling...' : 'Cancel Reservation' }}
+          </button>
+          <button class="btn-primary" (click)="convertToBorrowing()" [disabled]="actionLoading">
+            Issue Book from Reservation
+          </button>
+        } @else {
+          <p class="no-actions">No actions available for status: <strong>{{ reservation.status }}</strong></p>
+        }
+      </div>
+    </div>
+  }
+</div>

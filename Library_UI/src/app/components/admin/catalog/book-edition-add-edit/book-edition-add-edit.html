@@ -1,0 +1,235 @@
+<div class="container">
+  <div class="header">
+    <h2>{{ editionId ? '✏️ Edit Edition' : '➕ Add Book Edition' }}</h2>
+  </div>
+
+  @if (error) { <div class="alert-error"><span class="alert-icon">⚠️</span>{{ error }}</div> }
+  @if (success) { <div class="alert-success"><span class="alert-icon">✅</span>{{ success }}</div> }
+  @if (loading) { <div class="alert-info"><span class="alert-icon">⏳</span>Loading...</div> }
+
+  @if (!loading) {
+    <div class="form-box">
+
+      <!-- ── Book & Publisher ── -->
+      <div class="section-title">📚 Book & Publisher</div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Book <span class="required">*</span></label>
+          <select [(ngModel)]="edition.bookId">
+            <option [value]="null" disabled>Select book</option>
+            @for (book of books; track book.bookId) {
+              <option [value]="book.bookId">{{ book.title }}</option>
+            }
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Publisher <span class="optional">(optional)</span></label>
+          <select [(ngModel)]="edition.publisherId">
+            <option [value]="null">— No Publisher —</option>
+            @for (pub of publishers; track pub.publisherId) {
+              <option [value]="pub.publisherId">{{ pub.name }}</option>
+            }
+          </select>
+        </div>
+      </div>
+
+      <!-- ── Edition Details ── -->
+      <div class="section-title">📋 Edition Details</div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Edition <span class="required">*</span></label>
+          <input type="text" [(ngModel)]="edition.edition" placeholder="e.g. 1st, 2nd, 3rd" />
+        </div>
+        <div class="form-group">
+          <label>ISBN <span class="required">*</span></label>
+          <input type="text" [(ngModel)]="edition.isbn" placeholder="13-digit ISBN" maxlength="13" />
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Publication Year</label>
+          <input type="number" [(ngModel)]="edition.publicationYear" placeholder="e.g. 2023" />
+        </div>
+        <div class="form-group">
+          <label>Language</label>
+          <select [(ngModel)]="edition.language">
+            <option value="">— Select Language —</option>
+            <option value="Bengali">Bengali (বাংলা)</option>
+            <option value="English">English</option>
+            <option value="Arabic">Arabic (العربية)</option>
+            <option value="Hindi">Hindi (हिन्दी)</option>
+            <option value="Urdu">Urdu (اردو)</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Page Count</label>
+          <input type="number" [(ngModel)]="edition.pageCount" placeholder="e.g. 320" />
+        </div>
+        <div class="form-group">
+          <label>Price (৳)</label>
+          <input type="number" [(ngModel)]="edition.price" placeholder="0.00" />
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Paper Type</label>
+          <select [(ngModel)]="edition.paperType">
+            <option value="">— Select Paper Type —</option>
+            <option value="Offset">Offset Paper</option>
+            <option value="Bond">Bond Paper</option>
+            <option value="Newsprint">Newsprint</option>
+            <option value="Glossy">Glossy / Art Paper</option>
+            <option value="Matte">Matte Coated</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Cover Type</label>
+          <select [(ngModel)]="edition.coverType">
+            <option value="">— Select Cover Type —</option>
+            <option value="Hardcover">Hardcover</option>
+            <option value="Paperback">Paperback</option>
+            <option value="Spiral">Spiral Bound</option>
+            <option value="Softcover">Soft Cover</option>
+            <option value="Leatherbound">Leather Bound</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- ── Cover Image ── -->
+      <div class="section-title">🖼️ Cover Image</div>
+      <div class="form-group">
+        <label>Cover Image <span class="optional">(optional)</span></label>
+        <div class="file-upload-zone" (click)="coverImageInput.click()" [class.has-file]="edition.coverImageFile">
+          <input #coverImageInput type="file" (change)="onCoverImageSelected($event)" accept="image/*" class="file-input-hidden" />
+          @if (edition.coverImageFile) {
+            <div class="file-upload-content">
+              <span class="file-upload-icon">🖼️</span>
+              <span class="file-upload-name">{{ edition.coverImageFile.name }}</span>
+              <span class="file-upload-hint">Click to change</span>
+            </div>
+          } @else {
+            <div class="file-upload-content">
+              <span class="file-upload-icon">📷</span>
+              <span class="file-upload-label">Click to upload cover image</span>
+              <span class="file-upload-hint">PNG, JPG, WEBP supported</span>
+            </div>
+          }
+        </div>
+      </div>
+
+      <!-- ── Soft Copy Toggle ── -->
+      <div class="form-group">
+        <label class="checkbox-label">
+          <input type="checkbox" [(ngModel)]="edition.hasSoftCopy" />
+          Has Soft Copy (eBook available)
+        </label>
+      </div>
+
+      <!-- ── Digital Copy / PDF Upload ── -->
+      <div class="section-title">📄 Digital Copy (PDF)</div>
+
+      @if (editionId) {
+        <!-- Edit mode: show existing digital copy info + replace option -->
+        @if (digitalError) { <div class="alert-error"><span class="alert-icon">⚠️</span>{{ digitalError }}</div> }
+
+        @if (digitalCopy) {
+          <div class="digital-info">
+            <div class="digital-meta">
+              <span class="digital-icon">📗</span>
+              <div>
+                <p class="digital-title"><strong>{{ digitalCopy.bookTitle }}</strong> — {{ digitalCopy.edition }}</p>
+                <p class="digital-details">
+                  <span class="badge-format">{{ digitalCopy.fileFormat }}</span>
+                  {{ digitalCopy.fileSizeInMB }} MB ·
+                  Uploaded {{ digitalCopy.uploadedAt | date:'mediumDate' }}
+                </p>
+              </div>
+            </div>
+            <div class="digital-actions">
+              <button type="button" class="btn-action btn-download" (click)="downloadDigitalCopy()">⬇️ Download</button>
+              <button type="button" class="btn-action btn-preview" (click)="previewDigitalCopy()">👁️ Preview</button>
+              <button type="button" class="btn-action btn-delete-pdf" (click)="deleteDigitalCopy()">🗑️ Delete</button>
+            </div>
+          </div>
+        }
+
+        <div class="form-group">
+          <label>{{ digitalCopy ? 'Replace PDF File' : 'Upload PDF File' }}</label>
+          <div class="file-upload-zone pdf-zone" (click)="pdfInput.click()" [class.has-file]="digitalFile">
+            <input #pdfInput type="file" accept="application/pdf" (change)="onDigitalFileSelected($event)" class="file-input-hidden" />
+            @if (digitalFile) {
+              <div class="file-upload-content">
+                <span class="file-upload-icon">📄</span>
+                <span class="file-upload-name">{{ digitalFile.name }}</span>
+                <span class="file-upload-hint">Click to change · PDF only</span>
+              </div>
+            } @else {
+              <div class="file-upload-content">
+                <span class="file-upload-icon">📤</span>
+                <span class="file-upload-label">Click to upload PDF</span>
+                <span class="file-upload-hint">Only PDF files are accepted</span>
+              </div>
+            }
+          </div>
+        </div>
+
+        @if (digitalFile) {
+          <button type="button" class="btn-upload-pdf" (click)="uploadDigitalCopy()" [disabled]="digitalUploading">
+            <span>{{ digitalUploading ? '⏳ Uploading...' : '📤 Upload Digital Copy' }}</span>
+          </button>
+        }
+
+      } @else {
+        <!-- Add mode: PDF file picker (uploaded automatically right after the edition is created) -->
+        @if (digitalError) { <div class="alert-error"><span class="alert-icon">⚠️</span>{{ digitalError }}</div> }
+        <div class="form-group">
+          <label>PDF File <span class="optional">(optional)</span></label>
+          <div class="file-upload-zone pdf-zone" (click)="pdfInputAdd.click()" [class.has-file]="digitalFile">
+            <input #pdfInputAdd type="file" accept="application/pdf" (change)="onDigitalFileSelected($event)" class="file-input-hidden" />
+            @if (digitalFile) {
+              <div class="file-upload-content">
+                <span class="file-upload-icon">📄</span>
+                <span class="file-upload-name">{{ digitalFile.name }}</span>
+                <span class="file-upload-hint">Click to change · PDF only</span>
+              </div>
+            } @else {
+              <div class="file-upload-content">
+                <span class="file-upload-icon">📤</span>
+                <span class="file-upload-label">Click to choose a PDF file</span>
+                <span class="file-upload-hint">Will be uploaded automatically after the edition is created</span>
+              </div>
+            }
+          </div>
+        </div>
+      }
+
+      <!-- ── Form Actions ── -->
+      <div class="form-actions">
+        <button (click)="submit()" [disabled]="submitting" class="btn-save">
+          {{ submitting ? '⏳ Saving...' : (editionId ? '💾 Update Edition' : '✅ Create Edition') }}
+        </button>
+        <button (click)="cancel()" [disabled]="submitting" class="btn-cancel">Cancel</button>
+      </div>
+
+    </div>
+  }
+
+  <!-- ── PDF Preview Modal ── -->
+  @if (showPreview && previewUrl) {
+    <div class="modal-overlay" (click)="closePreview()">
+      <div class="modal-box" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h3>📄 PDF Preview</h3>
+          <button (click)="closePreview()" class="btn-close">✕ Close</button>
+        </div>
+        <iframe [src]="previewUrl | safe" width="100%" height="600px" style="border:none;border-radius:0 0 12px 12px;"></iframe>
+      </div>
+    </div>
+  }
+</div>

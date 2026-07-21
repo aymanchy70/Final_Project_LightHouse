@@ -1,0 +1,53 @@
+<div class="container">
+  <div class="header">
+    <h2>🏢 Publishers</h2>
+    <a routerLink="/admin/publishers/add" class="btn-add">+ Add Publisher</a>
+  </div>
+
+  <div class="toolbar">
+    <input type="text" [(ngModel)]="searchTerm" (input)="refresh()" placeholder=" Search name, email, phone..." class="search-input" />
+  </div>
+
+  @if (error) { <div class="alert-error">{{ error }}</div> }
+  @if (successMessage) { <div class="alert-success"> {{ successMessage }}</div> }
+  @if (loading) { <div class="alert-info"> Loading...</div> }
+  @if (!loading && filtered.length === 0 && !error) { <div class="alert-warning">No publishers found.</div> }
+
+  @if (!loading && filtered.length > 0) {
+    <table>
+      <thead>
+        <tr>
+          <th class="sortable" (click)="sortBy('publisherId')"># {{ icon('publisherId') }}</th>
+          <th class="sortable" (click)="sortBy('name')">Name {{ icon('name') }}</th>
+          <th class="sortable" (click)="sortBy('phone')">Phone {{ icon('phone') }}</th>
+          <th class="sortable" (click)="sortBy('email')">Email {{ icon('email') }}</th>
+          <th>Website</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (item of paged; track item.publisherId) {
+          <tr>
+            <td>{{ item.publisherId }}</td>
+            <td><strong>{{ item.name }}</strong></td>
+            <td>{{ item.phone || '—' }}</td>
+            <td>{{ item.email || '—' }}</td>
+            <td>{{ item.website || '—' }}</td>
+            <td class="actions">
+              <button (click)="details(item.publisherId)" class="btn-details"> Details</button>
+              <button (click)="edit(item.publisherId)" class="btn-edit"> Edit</button>
+              <button (click)="delete(item.publisherId)" class="btn-delete">🗑️ Delete</button>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+    <app-pagination
+      [currentPage]="currentPage"
+      [totalItems]="filtered.length"
+      [pageSize]="pageSize"
+      (pageChanged)="onPageChanged($event)"
+      (pageSizeChanged)="onPageSizeChanged($event)">
+    </app-pagination>
+  }
+</div>

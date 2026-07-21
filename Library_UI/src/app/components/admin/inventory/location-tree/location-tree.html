@@ -1,0 +1,84 @@
+<div class="container">
+  <div class="header">
+    <h2>🌳 Location Tree</h2>
+  </div>
+
+  @if (error) { 
+    <div class="alert-error">{{ error }}</div> 
+  }
+  
+  @if (loading) { 
+    <div class="alert-info"> Loading...</div> 
+  }
+
+  @if (!loading && floors.length > 0) {
+    <div class="tree">
+      @for (floor of floors; track floor.floorId) {
+        <div class="tree-node floor-node">
+          <div 
+            class="tree-header" 
+            (click)="toggleFloor(floor.floorId)"
+          >
+            <span class="tree-toggle">
+              {{ expandedFloors.has(floor.floorId) ? '▼' : '▶' }}
+            </span>
+            <strong>📍 {{ floor.floorCode }} - {{ floor.floorName }}</strong>
+          </div>
+
+          @if (expandedFloors.has(floor.floorId)) {
+            <div class="tree-children">
+              @for (section of floor.sections || []; track section.sectionId) {
+                <div class="tree-node section-node">
+                  <div 
+                    class="tree-header" 
+                    (click)="toggleSection(section.sectionId)"
+                  >
+                    <span class="tree-toggle">
+                      {{ expandedSections.has(section.sectionId) ? '▼' : '▶' }}
+                    </span>
+                    <strong>📑 {{ section.sectionCode }} - {{ section.sectionName }}</strong>
+                  </div>
+
+                  @if (expandedSections.has(section.sectionId)) {
+                    <div class="tree-children">
+                      @for (rack of section.racks || []; track rack.rackId) {
+                        <div class="tree-node rack-node">
+                          <div 
+                            class="tree-header" 
+                            (click)="toggleRack(rack.rackId)"
+                          >
+                            <span class="tree-toggle">
+                              {{ expandedRacks.has(rack.rackId) ? '▼' : '▶' }}
+                            </span>
+                            <strong>🗄️ {{ rack.rackCode }} - {{ rack.rackName }}</strong>
+                          </div>
+
+                          @if (expandedRacks.has(rack.rackId)) {
+                            <div class="tree-children">
+                              @for (shelf of rack.shelves || []; track shelf.shelfId) {
+                                <div class="tree-node shelf-node">
+                                  <div class="tree-header">
+                                    <span class="tree-toggle">📦</span>
+                                    {{ shelf.shelfCode }} - {{ shelf.shelfLabel }}
+                                  </div>
+                                </div>
+                              }
+                            </div>
+                          }
+                        </div>
+                      }
+                    </div>
+                  }
+                </div>
+              }
+            </div>
+          }
+        </div>
+      }
+    </div>
+  }
+
+  @if (!loading && floors.length === 0 && !error) {
+    <div class="alert-warning">No location data found.</div>
+  }
+</div>
